@@ -6,6 +6,7 @@
 
 public class Base{
 
+    public static double[] fitness;
     public static final char[][] schemes;
     static{
         schemes = new char[8][64];
@@ -26,15 +27,6 @@ public class Base{
         optimal = new char[64];
         for(int i = 0; i < 64; i++) optimal[i] = '1';
     }
-
-
-    // Other
-    public static char[][] population;
-    public static double[] fitness;
-    public static char[][] previousPopulation;
-    public static double pc;  // Crossover probability
-    public static double pm; // Mutation probability
-
 
     /*
      * Evaluate the fitness of N individuals
@@ -81,6 +73,35 @@ public class Base{
         return value*8;
     }
     
+    public static char[] oldBest(char[][] population, double[] fitness){
+        int n = population.length;
+        int l = population[0].length;
+        char[] best = new char[l];
+
+        int index = 0;
+        double max = 0.0;
+        for(int i = 0; i < n; i++){
+            if(max < fitness[i]){
+                max = fitness[i];
+                index = i;
+            }
+        }
+
+        for(int j = 0; j < n; j++)
+            best[j] = population[index][j];
+
+    return best;
+    }
+
+    /*
+     * Copies by value arr1 into arr2
+     */
+    public static void hardcopy(char[][] arr1, char[][] arr2){
+        for(int i = 0; i < arr1.length; i++)
+            for(int j = 0; j < arr1[0].length; j++)
+                arr2[i][j] = arr1[i][j];
+    }
+
     public static void main(String[] args){
 
         for(int i = 0; i < 8; i++){

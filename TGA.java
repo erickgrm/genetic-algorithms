@@ -13,7 +13,7 @@ public class TGA{
     // Other
     public static char[][] population;
     public static double[] fitness;
-    public static char[][] previousPopulation;
+    public static char[][] tempPopulation;
     public static double pc;  // Crossover probability
     public static double pm; // Mutation probability
 
@@ -26,35 +26,111 @@ public class TGA{
 
         for(int i = 0; i < N; i++){
             for(int j = 0; j < L; j++){
-                if(Math.random() < 0.5)
+                if(Math.random(0,1) < 0.5)
                     population[i][j] = '1';
                 else 
                     population[i][j] = '0';
             }
         }
     }
+
+    /*
+     *  1. Selection of individuals for crossover
+     * From population, chooses N/2 pairs to reproduce
+     * Saves new population in tempPopulation
+     */
+    public static void crossoverSelection(){
+        tempPopulation = new char[N][L];
+        int accFitness = Base.sum(fitness);
+        double r;
+        double c;
+        double ca;
+        int flag = 0;
+        int chosen = 0;
+
+        while(chosen < N){
+            int i = 0;
+            r = Math.random(0,1);
+            c = r*accFitness;
+            ca = 0;
+            while(flag == 0 && i < N){
+                ca += fitness[i]; 
+                if(ca > c){
+                    flag = 1;
+                    tempPopulation[i] = population[i];
+                }
+                i += 1;
+            }
+        }
+    }
     
     /*
-     * 1. Crossover routine
-     * Evaluates fitness of all current individuals, chooses pairs to recombine, recombine
-     * stops when reaching a new population of size N
+     * 2. Crossover routine
      * TGA: Keep best of old population
-     * @returns new population
      */
+    public static void crossover(){
+        double d;
+        int x;
+        char[] new1 = new char[L];
+        char[] new2 = new char[L];
+
+        for(int i = 0; i < N-1; i += 2){
+            d = Math.random(0,1);
+            // Perform crossover if d > probability of crossover
+            if(pc < d){
+                x = Math.random(0,L);
+                // Construction of new individual 1
+                for(int j = 0; j < x; j++)
+                    new1[j] = tempPopulation[i][j];
+                for(int j = x; j < L; j++)
+                    new1[j] = tempPopulation[i+1][j];
+                // Construction of new individual 2
+                for(int j = 0; j < x; j++)
+                    new2[j] = population[i+1][j];
+                for(int j = x; j < L; j++)
+                    new2[j] = population[i][j];
+
+                // Copy new individuals to tempPopulation
+                for(int j = 0; j < L; j++){
+                    tempPopulation[i][j] = new1[j];
+                    tempPopulation[i+1][j] = new2[j];
+                }
+            }
+            else; 
+                // If pc => d, there is no crossover and the new individuals are the current individuals. 
+                // No need to change tempPopulation
+        }
+            
+    }
 
     /* 
-     * 2. Mutation routine
-     * Mutate the bits of each element in the new  population (after crossover)
+     * 3. Mutation routine
+     * Mutate the bits of each element in the population after crossover
      * TGA: Keep best of old population
-     * @returns new population
-     * /
+     */
+    public static void mutation(){
+        double q;
+
+        for(int i=0; i < N; i++){
+            for(int j=0; j < L; j++){ 
+                q = Math.random();
+                // If probability of mutation > q, swap the bit
+                if(q < pm){
+                    if(tempPopulation[i][j] == '1')
+                        tempPopulation[i][j] = '0';
+                    else 
+                        tempPopulation[i][j] = '1';
+                }
+                else;
+                    // No mutation takes place, leave bits unchanged
+            }
+        }
+    }
 
      /*
       * 3. Selects P(t+1)
       * No need to select anymore, mutated population will be P(t). 
       */
-
-
 
     /*
      * MAIN methods
