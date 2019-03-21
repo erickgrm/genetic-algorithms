@@ -6,7 +6,7 @@
 
 public class Base{
 
-    public static double[] fitness;
+    //public static double[] fitness;
     public static final char[][] schemes;
     static{
         schemes = new char[8][64];
@@ -35,7 +35,7 @@ public class Base{
     public static double[] fitnessEvaluation(char[][] toEvaluate){
         int n = toEvaluate.length;
         int l = toEvaluate[0].length; 
-        fitness = new double[n];
+        double[] values = new double[n];
         
         char genome[];
         genome = new char[64];
@@ -46,9 +46,9 @@ public class Base{
                 for(int j = 0; j < l; j++)
                     genome[j] = toEvaluate[i][j];
 
-                fitness[i] = targetFn(genome);
+                values[i] = targetFn(genome);
             }
-        return fitness;
+        return values;
     }
     
     /*
@@ -73,7 +73,7 @@ public class Base{
         return value*8;
     }
     
-    public static char[] oldBest(char[][] population, double[] fitness){
+    public static char[] best(char[][] population, double[] fitness){
         int n = population.length;
         int l = population[0].length;
         char[] best = new char[l];
@@ -87,7 +87,7 @@ public class Base{
             }
         }
 
-        for(int j = 0; j < n; j++)
+        for(int j = 0; j < l; j++)
             best[j] = population[index][j];
 
     return best;
@@ -101,6 +101,27 @@ public class Base{
             for(int j = 0; j < arr1[0].length; j++)
                 arr2[i][j] = arr1[i][j];
     }
+
+   /*
+    * @returns S the sum of the values in an array
+    */
+    public static double sum(double[] arr){
+        double total = 0.0;
+        for(int i = 0; i < arr.length; i++)
+            total += arr[i];
+        return total;
+    }
+   /*
+    * @returns maximum of array
+    */
+    public static double max(double[] arr){
+        double max = 0.0;
+        for(int i = 0; i < arr.length; i++)
+            if(max < arr[i])
+                max = arr[i];
+        return max;
+    }
+
 
     public static void main(String[] args){
 

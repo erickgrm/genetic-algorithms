@@ -1,9 +1,9 @@
 /*
  * Implementation of Elitist Genetic Algorithm (TGA)
  *@author Erick García Ramírez
- *
+ * Algoritmos Genéticos, MCIC 2019-2
  */
-
+import java.util.Scanner;
 public class TGA{
 
     // Population parameters
@@ -14,9 +14,10 @@ public class TGA{
     public static char[][] population;
     public static double[] fitness;
     public static char[][] tempPopulation;
+    public static char[] oldBest;
+
     public static double pc;  // Crossover probability
     public static double pm; // Mutation probability
-
 
     /*
      * Initialise a random population of size N
@@ -26,7 +27,7 @@ public class TGA{
 
         for(int i = 0; i < N; i++){
             for(int j = 0; j < L; j++){
-                if(Math.random(0,1) < 0.5)
+                if(Math.random() < 0.5)
                     population[i][j] = '1';
                 else 
                     population[i][j] = '0';
@@ -40,26 +41,31 @@ public class TGA{
      * Saves new population in tempPopulation
      */
     public static void crossoverSelection(){
-        tempPopulation = new char[N][L];
-        int accFitness = Base.sum(fitness);
+        double accFitness = Base.sum(fitness);
         double r;
         double c;
         double ca;
-        int flag = 0;
-        int chosen = 0;
+        int flag, i;
 
-        while(chosen < N){
-            int i = 0;
-            r = Math.random(0,1);
+        for(int chosen = 0; chosen < N; chosen++){
+            flag = 0;
+            r = Math.random();
             c = r*accFitness;
-            ca = 0;
-            while(flag == 0 && i < N){
+            ca = 0.0;
+            // Choose via proportional representation + random factor
+            for(i = 0; i < N && flag == 0; i++){
                 ca += fitness[i]; 
                 if(ca > c){
                     flag = 1;
-                    tempPopulation[i] = population[i];
+                    for(int j = 0; j < L; j++)
+                        tempPopulation[chosen][j] = population[i][j];
                 }
-                i += 1;
+            }
+            // If none was chosen above, pick a random one
+            if(i == N){
+                i = (int) (N*Math.random());
+                for(int j = 0; j < L; j++)
+                    tempPopulation[chosen][j] = population[i][j];
             }
         }
     }
@@ -69,16 +75,15 @@ public class TGA{
      * TGA: Keep best of old population
      */
     public static void crossover(){
-        double d;
         int x;
         char[] new1 = new char[L];
         char[] new2 = new char[L];
 
-        for(int i = 0; i < N-1; i += 2){
-            d = Math.random(0,1);
+        for(int i = 0; i < N-2; i += 2){
             // Perform crossover if d > probability of crossover
-            if(pc < d){
-                x = Math.random(0,L);
+            if(pc < Math.random()){
+                // Generate random int between 0 and L
+                x = (int) (Math.random()*L);
                 // Construction of new individual 1
                 for(int j = 0; j < x; j++)
                     new1[j] = tempPopulation[i][j];
@@ -94,13 +99,12 @@ public class TGA{
                 for(int j = 0; j < L; j++){
                     tempPopulation[i][j] = new1[j];
                     tempPopulation[i+1][j] = new2[j];
-                }
+                    }
             }
             else; 
                 // If pc => d, there is no crossover and the new individuals are the current individuals. 
                 // No need to change tempPopulation
         }
-            
     }
 
     /* 
@@ -129,14 +133,36 @@ public class TGA{
 
      /*
       * 3. Selects P(t+1)
-      * No need to select anymore, mutated population will be P(t). 
+      * Ensure we keep best so far
       */
+    public static void survival(){
+        char[] oldBest;
+        oldBest = new char[L];
+        oldBest = Base.best(population, fitness);
+
+        // Find index of worst individual in tempPopulation
+        double[] tempFitness = new double[N];
+        tempFitness = Base.fitnessEvaluation(tempPopulation); 
+        double min = 0;
+        int index = 0;
+        for(int i = 0; i< N; i++){
+            if(tempFitness[i] < min){
+                min = tempFitness[i];
+                index = i;
+            }
+        }
+        // Swap worst in tempPopulation with oldBest, generating new population
+        for(int j = 0; j < L; j++)
+            tempPopulation[index][j] = oldBest[j];
+
+        Base.hardcopy(tempPopulation, population);
+    }
 
     /*
-     * MAIN methods
-     * Creat a new object of class AGS
+     * MAIN method
+     * Creat a new object of class TGA
      */
-    public static double[] TGA(int N, int L, double pc, double pm, int G){
+    public static double TGA(int N, int L, double pc, double pm, int G){
 
        TGA.N = N;
        TGA.L = L;
@@ -146,50 +172,41 @@ public class TGA{
        //Start with random population P(0)
        startPopulation();
 
-       // Print P(0)
-       //System.out.println("Test");
-       //for(int i = 0; i < N; i++){
-       //    for(int j = 0; j < L; j++)
-       //        System.out.print(population[i][j]);
-       //    System.out.println();
-       //}
-
-       // Temporal population to move from P(t) to P(t+1)
-       char[][] tempPopulation;
+       // Temporary population to move from P(t) to P(t+1)
+       tempPopulation = new char[N][L];
 
        fitness = new double[N];
 
        for(int t = 0; t < G; t++){
-           // Evaluation of fitness
-           fitness = Base.fitnessEvaluation(population);
-           //Selection for reproduction
-           tempPopulation = crossover();
-           ////Crossover
-           //combined = crossover(tempPopulation);
-           //// 
-           ////Select best in 
-           //survivors(tempPopulation, combined);
+            // Evaluation of fitness
+            fitness = Base.fitnessEvaluation(population);
+
+            // Selection for crossover
+            crossoverSelection();
+           
+            // Crossover: Produces a temporary new population tempPopulation
+            crossover();
+
+            // Mutation: Produces a temporary new population after reproduction
+            mutation();
+
+            // Generate P(t+1) and allocates it to population
+            // Previous best is kept
+            survival();
        }
-       return fitness;
+       return Base.max(fitness);
     }
 
-
     public static void main(String[] args){
-        
-        //for(int i = 0; i < 8; i++){
-        //    for(int j = 0; j < 64; j++)
-        //        System.out.print(Base.schemes[i][j]);
-        //    System.out.println();
-        //}
+        System.out.println(TGA(70, 64, 0.9, 0.05, 500));
 
-        double[] aux;
-        aux = TGA(70, 64, 0.9, 0.05, 500);
-        for(int i = 0; i < 70; i++){
-                System.out.print(aux[i]);
-            System.out.println();
-        }
+        //double sum =0.0;
+        //Scanner sc = new Scanner(System.in);
+        //int rep = sc.nextInt();
 
-        //System.out.println(TGA(70,500, 64, schemes, 0.9, 0.05);
+        //for(int i = 0; i < rep;  i++)
+        //    sum += TGA(70, 64, 0.9, 0.05, 500);
+        //System.out.println(sum/rep);
     }
 
 }
