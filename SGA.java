@@ -36,45 +36,61 @@ public class SGA{
      */
     public static void calcBitsProbabilities(){
         for(int k = 0; k < L; k++){
-                bitsProbabilities[k] = 0;
-            }
+            bitsProbabilities[k] = 0.0;
+        }
 
-        for(int k = 0; k < L; k++)
+        for(int k = 0; k < L; k++){
             for(int i = 0; i < N; i++){
-                bitsProbabilities[k] += relFitness[i]*population[i][k];
+                if(population[i][k] == '1')
+                bitsProbabilities[k] += relFitness[i];
             }
+        }
     }
 
     /*
      * Generate the new population using the probabilities calculated for each bit
      */
     public static void generateNewPopulation(){
-        double dj = 0.0;
-        double dk = 0.0;
+        // Find best before changing the whole population
+        char[] oldBest = new char[L];
+        oldBest = Base.best(population, fitness);
+    
+        // Generate new population bit by bit
+        double d = 0.0;
 
         for(int i = 0; i < N; i++){
             for(int j = 0; j < L; j++){
                 
-                while(dj == 0.0 || dk == 0){
-                    dk = Math.random();
-                    dj = Math.random();
-                }
-
+                d = Math.random();
                 // Select bit
-                if(0.005 < dj){
-                    if(bitsProbabilities[j] < dk)
+                if(0.005 < Math.random()){
+                    if(bitsProbabilities[j] < d)
                         population[i][j] = '0';
                     else 
                         population[i][j] = '1';
                 }
                 else{
-                    if(bitsProbabilities[j] < dk)
+                    if(bitsProbabilities[j] < d)
                         population[i][j] = '1';
                     else 
                         population[i][j] = '0';
                 }
             }
         }
+        // Find index of worst individual in population
+        double[] tempFitness = new double[N];
+        tempFitness = Base.fitnessEvaluation(population); 
+        double min = 0.0;
+        int index = 0;
+        for(int i = 0; i< N; i++){
+            if(tempFitness[i] < min){
+                min = tempFitness[i];
+                index = i;
+            }
+        }
+        // Swap worst in population with oldBest, generating new population
+        for(int j = 0; j < L; j++)
+            population[index][j] = oldBest[j];
     }
 
     /*
@@ -85,18 +101,18 @@ public class SGA{
 
        SGA.N = N;
        SGA.L = L;
-
-       //Start with random population P(0)
-       startPopulation();
-
        fitness = new double[N];
        relFitness = new double[N];
        bitsProbabilities = new double[L];
 
+       //Start with random population P(0)
+       startPopulation();
+
+       // Generate G generations
        for(int t = 0; t < G; t++){
             // Evaluation of fitness
-            fitness = Base.fitnessEvaluation(population);
-
+            fitness = Base.sgafitnessEvaluation(population);
+            
             // Calculate Relative fitness
             relFitness = Base.relFitness(fitness);
             
@@ -106,25 +122,39 @@ public class SGA{
             // Generate individuals
             generateNewPopulation();
        }
-       // Calculate fitness of the last generation
-       fitness = Base.fitnessEvaluation(population);
 
-       return Base.max(fitness);
+       // Calculate fitness of the last generation and return best
+       return Base.max(Base.fitnessEvaluation(population));
     }
 
     public static void main(String[] args){
-        System.out.println(SGA(70, 64, 500));
-
+        
+        // System.out.println(SGA(70, 64, 500));
+    
+        // Several runs
+        double  temp;
         double sum = 0.0;
-        //Scanner sc = new Scanner(System.in);
-        //int rep = sc.nextInt();
-
-       // for(int i = 0; i < 1000;  i++){
-       //     //System.out.println(SGA(70,64,500));
-       //     sum += SGA(70, 64, 500);
-       // }
-       //     System.out.println(sum/1000);
+        int[] freq = new int[9];
+        for(int i = 0; i < 1000;  i++){
+            temp = SGA(70, 64, 500);
+            //System.out.println(temp);
+            sum += temp;
+            freq[(int) temp / 8] ++;
+        }
+            for(int i = 0; i < 9; i++){
+                System.out.print(i*8);
+                System.out.print(" = ");
+                System.out.println(freq[i]);
+            }
+            System.out.println(sum/1000);
         
     }
 
 }
+       // Print last generation
+       //System.out.println("LAST GENERATION");
+       //for(int i=0; i < N; i++){
+       //     for(int j=0; j < L; j++)
+       //         System.out.print(population[i][j]);
+       //     System.out.println();
+       //}

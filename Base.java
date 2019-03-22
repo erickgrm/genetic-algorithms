@@ -50,6 +50,32 @@ public class Base{
             }
         return values;
     }
+
+    /*
+     * Evaluate the fitness of N individuals under SGA
+     * @returns an array of N doubles
+     */
+    public static double[] sgafitnessEvaluation(char[][] toEvaluate){
+        int n = toEvaluate.length;
+        double[] v = new double[n];
+        v = fitnessEvaluation(toEvaluate);
+        double[] vsga = new double[n];
+        
+        double mean = 0.0;
+        double min = v[0];
+
+            for(int i = 0; i < n; i++){
+                mean += v[i];
+                if(v[i] < min)
+                    min = v[i];
+            }
+            mean /= n;
+            
+            for(int i = 0; i < n; i++)
+                vsga[i] = v[i] + mean + min; 
+
+        return vsga;
+    }
     /*
      * Calcuate  relative fitness of the individuals
      * @returns an array of N doubles
@@ -107,9 +133,14 @@ public class Base{
             }
         }
 
-        for(int j = 0; j < l; j++)
-            best[j] = population[index][j];
-
+        if(0.0 < max) 
+            for(int j = 0; j < l; j++)
+                best[j] = population[index][j];
+        else{
+            index = (int) (n*Math.random());
+            for(int j = 0; j < l; j++)
+                best[j] = population[index][j];
+        }
     return best;
     }
 
