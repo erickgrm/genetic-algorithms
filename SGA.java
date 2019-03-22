@@ -1,5 +1,5 @@
 /*
- * Implementation of Statistical Genetic Algorithm (SGA o STAUN)
+ * Implementation of (Elitist) Statistical Genetic Algorithm SGA
  *@author Erick García Ramírez
  * Algoritmos Genéticos, MCIC 2019-2
  */

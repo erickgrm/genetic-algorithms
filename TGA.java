@@ -168,6 +168,7 @@ public class TGA{
        TGA.L = L;
        TGA.pc = pc;
        TGA.pm = pm;
+       fitness = new double[N];
 
        //Start with random population P(0)
        startPopulation();
@@ -175,13 +176,12 @@ public class TGA{
        // Temporary population to move from P(t) to P(t+1)
        tempPopulation = new char[N][L];
 
-       fitness = new double[N];
-
+       // Generate  G generations
        for(int t = 0; t < G; t++){
             // Evaluation of fitness
             fitness = Base.fitnessEvaluation(population);
 
-            // Selection for crossover
+           // Selection for crossover
             crossoverSelection();
            
             // Crossover: Produces a temporary new population tempPopulation
@@ -190,23 +190,31 @@ public class TGA{
             // Mutation: Produces a temporary new population after reproduction
             mutation();
 
-            // Generate P(t+1) and allocates it to population
-            // Previous best is kept
+            // Generate P(t+1) and allocates it to population. Previous best is kept (elitism)
             survival();
        }
-       return Base.max(fitness);
+       return Base.max(Base.fitnessEvaluation(population));
     }
 
     public static void main(String[] args){
-        System.out.println(TGA(70, 64, 0.9, 0.05, 500));
+        //System.out.println(TGA(70, 64, 0.9, 0.05, 500));
 
-        //double sum =0.0;
-        //Scanner sc = new Scanner(System.in);
-        //int rep = sc.nextInt();
+		// Several runs
+        double  temp;
+        double sum = 0.0;
+        int[] freq = new int[9];
+        for(int i = 0; i < 1000;  i++){
+            temp = TGA(70, 64, 0.9, 0.05, 500);
+            sum += temp;
+            freq[(int) temp / 8] ++;
+        }
+            for(int i = 0; i < 9; i++){
+                System.out.print(i*8);
+                System.out.print(" = ");
+                System.out.println(freq[i]);
+            }
+            System.out.println(sum/1000);
 
-        //for(int i = 0; i < rep;  i++)
-        //    sum += TGA(70, 64, 0.9, 0.05, 500);
-        //System.out.println(sum/rep);
     }
 
 }

@@ -12,9 +12,6 @@ public class EGA{
     // Other
     public static char[][] population;
     public static char[][] tempPopulation; 
-    //public static double[] fitness; // length 2*N
-
-    public static double pc;  // Crossover probability
     public static double pm; // Mutation probability
 
     /*
@@ -34,154 +31,162 @@ public class EGA{
     }
 
     /*
-    
-    /*
-     * 1. Order population according to fitness
+     * Order individuals according to fitness
      */
-    public static void orderByFitness(){
+    public static char[][] orderByFitness(char[][] individuals){
+        int n = individuals.length;
+        int l = individuals[0].length;
+        double temp;
+        char swp;
+        double[] fit = Base.fitnessEvaluation(individuals);
 
+        for(int r = 0; r < n; r++){
+            for(int i = 0; i < n-1; i++){
+                if(fit[i] < fit[i+1]){
+                    temp = fit[i];
+                    fit[i] =  fit[i+1];
+                    fit[i+1] = temp;
+                    // Swap corresponding individuals
+                    for(int j = 0; j < l; j++){
+                        swp = individuals[i][j];
+                        individuals[i][j] = individuals[i+1][j];
+                        individuals[i+1][j] = swp;
+                    }
+                }
+            }
+        }//END of r for 
+        return individuals;
     }
 
     /*
-     * 2. Crossover routine, deterministic selection
+     * Anular crossover routine, deterministic selection
      */
-    public static void anularCrossover(){
+    public static char[][] detCrossover(char[][] individuals){
         int x;
         int halfring;
         char[] new1 = new char[L];
         char[] new2 = new char[L];
         
-        
+        // Crossover i and N-i-1
         for(int i = 0; i < (int) N/2; i++){
-            // If probability of population crossover > pc, do the crossover
+            // Length of the half-ring to be exchanged
+            halfring = (int) (L*Math.random());
+            // Get start position for the half-ring
+            x = (int) (L*Math.random());
+            for(int j = 0; j < x; j++)
+                new1[j] = individuals[i][j];
+            for(int j = x; j < halfring; j++)
+                new1[j % L] = individuals[N-i-1][j % L];
+            for(int j = 0; j < x; j++)
+                new2[j] = individuals[N-i-1][j];
+            for(int j = x; j < halfring; j++)
+                new2[j % L] = individuals[i][j % L];
 
-            if(pc < pcPopulation){
-                
-                // Crossover i and N-i, generating ndPopulation descendants
-                for(int k = 0; k < ndPopulation; k++){
-                    // Get length of the half-ring to be exchanged
-                    halfring = (int) (L*Math.random());
-                    // Get start position for the half-ring
-                    x = (int) (L*Math.random());
-                    for(int j = 0; j < x; j++)
-                        new1[j] = tempPopulation[i][j];
-                    for(int j = x; j < halfring; j++)
-                        new1[j % L] = tempPopulation[N-i-1][j % L];
-                    for(int j = 0; j < x; j++)
-                        new2[j] = tempPopulation[N-i-1][j];
-                    for(int j = x; j < halfring; j++)
-                        new2[j % L] = tempPopulation[i][j % L];
-
-                    // Copy new individuals to tempPopulation
-                    for(int j = 0; j < L; j++){
-                        tempPopulation[i][j] = new1[j];
-                        tempPopulation[N-i-1][j] = new2[j];
-                    }
-                }
+            // Copy new individuals 
+            for(int j = 0; j < L; j++){
+                individuals[i][j] = new1[j];
+                individuals[N-i-1][j] = new2[j];
             }
         }
+        return individuals;
     }
 
     /* 
-     * 3. Mutation routine
-     * Mutate the bits of each element in the population after crossover
-     * TGA: Keep best of old population
+     * Uniform mutation 
      */
-    public static void mutation(){
-        double q;
+    public static char[][] mutation(char[][] individuals){
 
         for(int i=0; i < N; i++){
             for(int j=0; j < L; j++){ 
-                q = Math.random();
-                // If probability of mutation > q, swap the bit
-                if(q < pm){
-                    if(tempPopulation[i][j] == '1')
-                        tempPopulation[i][j] = '0';
+                // If probability of mutation > random number, swap the bit
+                if(Math.random() < pm){
+                    if(individuals[i][j] == '1')
+                        individuals[i][j] = '0';
                     else 
-                        tempPopulation[i][j] = '1';
+                        individuals[i][j] = '1';
                 }
-                else;
-                    // No mutation takes place, leave bits unchanged
             }
         }
+        return individuals;
     }
 
      /*
-      * 3. Selects P(t+1)
-      * Ensure we keep best so far
+      * Select P(t+1)
+      * Ensure we keep the N best so far
       */
-    public static void survival(){
-        char[] oldBest;
-        oldBest = new char[L];
-        oldBest = Base.best(population, fitness);
+    public static char[][] generateNewPopulation(char[][] individuals){
+        char[][] best = new char[N][L];
+        char[][] ordIndividuals;
+        ordIndividuals = orderByFitness(individuals);
 
-        // Find index of worst individual in tempPopulation
-        double[] tempFitness = new double[N];
-        tempFitness = Base.fitnessEvaluation(tempPopulation); 
-        double min = 0;
-        int index = 0;
-        for(int i = 0; i< N; i++){
-            if(tempFitness[i] < min){
-                min = tempFitness[i];
-                index = i;
-            }
-        }
-        // Swap worst in tempPopulation with oldBest, generating new population
-        for(int j = 0; j < L; j++)
-            tempPopulation[index][j] = oldBest[j];
+        for(int i = 0; i < N; i++)
+            for(int j = 0; j < L; j++)
+                best[i][j] = ordIndividuals[i][j];
 
-        Base.hardcopy(tempPopulation, population);
+        return best;
     }
 
     /*
      * MAIN method
-     * Creat a new object of class TGA
+     * Creat a new object of class EGA
      */
-    public static double TGA(int N, int L, double pc, double pm, int G){
+    public static double EGA(int N, int L, double pm, int G){
 
-       TGA.N = N;
-       TGA.L = L;
-       TGA.pc = pc;
-       TGA.pm = pm;
+       EGA.N = N;
+       EGA.L = L;
+       EGA.pm = pm;
+       tempPopulation = new char[N][L];
 
        //Start with random population P(0)
        startPopulation();
 
-       // Temporary population to move from P(t) to P(t+1)
-       tempPopulation = new char[N][L];
-
-       fitness = new double[N];
-
        for(int t = 0; t < G; t++){
-            // Evaluation of fitness
-            fitness = Base.fitnessEvaluation(population);
+            Base.hardcopy(population,tempPopulation);
 
-            // Selection for crossover
-            crossoverSelection();
-           
-            // Crossover: Produces a temporary new population tempPopulation
-            crossover();
+            // Order by fitness
+            tempPopulation = orderByFitness(tempPopulation);
 
-            // Mutation: Produces a temporary new population after reproduction
-            mutation();
+            // Deterministic crossover
+            tempPopulation = detCrossover(tempPopulation);
+            
+            // Mutation 
+            tempPopulation = mutation(tempPopulation);
 
-            // Generate P(t+1) and allocates it to population
-            // Previous best is kept
-            survival();
+            // Concatenate old population with tempPopulation
+            char[][] aux = new char[2*N][L];
+            for(int i = 0; i < N; i++)
+                for(int j = 0; j < L; j++)
+                    aux[i][j] = population[i][j];
+            for(int i = 0; i < N; i++)
+                for(int j = 0; j < L; j++)
+                    aux[N+i][j] = tempPopulation[i][j];
+
+            // Select N best
+            population = generateNewPopulation(aux);
        }
-       return Base.max(fitness);
+
+       // Return maximum value in last generation
+       return Base.max(Base.fitnessEvaluation(population));
     }
 
     public static void main(String[] args){
-        System.out.println(TGA(70, 64, 0.9, 0.05, 500));
+        //System.out.println(EGA(70, 64, 0.05, 500));
 
-        //double sum =0.0;
-        //Scanner sc = new Scanner(System.in);
-        //int rep = sc.nextInt();
-
-        //for(int i = 0; i < rep;  i++)
-        //    sum += TGA(70, 64, 0.9, 0.05, 500);
-        //System.out.println(sum/rep);
+   		// Several runs
+        double  temp;
+        double sum = 0.0;
+        int[] freq = new int[9];
+        for(int i = 0; i < 1000;  i++){
+            temp = EGA(70, 64, 0.05, 500);
+            sum += temp;
+            freq[(int) temp / 8] ++;
+        }
+        for(int i = 0; i < 9; i++){
+			System.out.print(i*8);
+			System.out.print(" = ");
+			System.out.println(freq[i]);
+		}
+		System.out.println(sum/1000);
     }
 
 }
