@@ -50,6 +50,26 @@ public class Base{
             }
         return values;
     }
+    /*
+     * Calcuate  relative fitness of the individuals
+     * @returns an array of N doubles
+     */
+    public static double[] relFitness(double[] values){
+        double maxValue = 0.0;
+        int n = values.length;
+        double[] relValues = new double[n];
+        
+        for(int i = 0; i < n; i++)
+            maxValue += values[i];
+
+        for(int i = 0; i < n; i++){
+            if(maxValue != 0.0) 
+                relValues[i] = values[i]/maxValue;
+            else 
+                relValues[i] = 0.0;
+        }
+        return relValues;
+    }
     
     /*
      * Evaluation of target function on a given genome

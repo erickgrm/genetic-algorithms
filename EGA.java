@@ -1,10 +1,9 @@
 /*
- * Implementation of Elitist Genetic Algorithm (TGA)
+ * Implementation of Eclectic Genetic Algorithm (EGA)
  *@author Erick García Ramírez
  * Algoritmos Genéticos, MCIC 2019-2
  */
-import java.util.Scanner;
-public class TGA{
+public class EGA{
 
     // Population parameters
     public static int N; // size of population
@@ -12,9 +11,8 @@ public class TGA{
 
     // Other
     public static char[][] population;
-    public static double[] fitness;
-    public static char[][] tempPopulation;
-    public static char[] oldBest;
+    public static char[][] tempPopulation; 
+    //public static double[] fitness; // length 2*N
 
     public static double pc;  // Crossover probability
     public static double pm; // Mutation probability
@@ -36,74 +34,51 @@ public class TGA{
     }
 
     /*
-     *  1. Selection of individuals for crossover
-     * From population, chooses N/2 pairs to reproduce
-     * Saves new population in tempPopulation
-     */
-    public static void crossoverSelection(){
-        double accFitness = Base.sum(fitness);
-        double r;
-        double c;
-        double ca;
-        int flag, i;
-
-        for(int chosen = 0; chosen < N; chosen++){
-            flag = 0;
-            r = Math.random();
-            c = r*accFitness;
-            ca = 0.0;
-            // Choose via proportional representation + random factor
-            for(i = 0; i < N && flag == 0; i++){
-                ca += fitness[i]; 
-                if(ca > c){
-                    flag = 1;
-                    for(int j = 0; j < L; j++)
-                        tempPopulation[chosen][j] = population[i][j];
-                }
-            }
-            // If none was chosen above, pick a random one
-            if(i == N){
-                i = (int) (N*Math.random());
-                for(int j = 0; j < L; j++)
-                    tempPopulation[chosen][j] = population[i][j];
-            }
-        }
-    }
     
     /*
-     * 2. Crossover routine
-     * TGA: Keep best of old population
+     * 1. Order population according to fitness
      */
-    public static void crossover(){
+    public static void orderByFitness(){
+
+    }
+
+    /*
+     * 2. Crossover routine, deterministic selection
+     */
+    public static void anularCrossover(){
         int x;
+        int halfring;
         char[] new1 = new char[L];
         char[] new2 = new char[L];
+        
+        
+        for(int i = 0; i < (int) N/2; i++){
+            // If probability of population crossover > pc, do the crossover
 
-        for(int i = 0; i < N-2; i += 2){
-            // Perform crossover if d > probability of crossover
-            if(pc < Math.random()){
-                // Generate random int between 0 and L
-                x = (int) (Math.random()*L);
-                // Construction of new individual 1
-                for(int j = 0; j < x; j++)
-                    new1[j] = tempPopulation[i][j];
-                for(int j = x; j < L; j++)
-                    new1[j] = tempPopulation[i+1][j];
-                // Construction of new individual 2
-                for(int j = 0; j < x; j++)
-                    new2[j] = population[i+1][j];
-                for(int j = x; j < L; j++)
-                    new2[j] = population[i][j];
+            if(pc < pcPopulation){
+                
+                // Crossover i and N-i, generating ndPopulation descendants
+                for(int k = 0; k < ndPopulation; k++){
+                    // Get length of the half-ring to be exchanged
+                    halfring = (int) (L*Math.random());
+                    // Get start position for the half-ring
+                    x = (int) (L*Math.random());
+                    for(int j = 0; j < x; j++)
+                        new1[j] = tempPopulation[i][j];
+                    for(int j = x; j < halfring; j++)
+                        new1[j % L] = tempPopulation[N-i-1][j % L];
+                    for(int j = 0; j < x; j++)
+                        new2[j] = tempPopulation[N-i-1][j];
+                    for(int j = x; j < halfring; j++)
+                        new2[j % L] = tempPopulation[i][j % L];
 
-                // Copy new individuals to tempPopulation
-                for(int j = 0; j < L; j++){
-                    tempPopulation[i][j] = new1[j];
-                    tempPopulation[i+1][j] = new2[j];
+                    // Copy new individuals to tempPopulation
+                    for(int j = 0; j < L; j++){
+                        tempPopulation[i][j] = new1[j];
+                        tempPopulation[N-i-1][j] = new2[j];
                     }
+                }
             }
-            else; 
-                // If pc => d, there is no crossover and the new individuals are the current individuals. 
-                // No need to change tempPopulation
         }
     }
 
