@@ -4,47 +4,86 @@
  *
  */
 
-public class Base{
+public class NNbase{
+    public static double[][] data;
+    public static int initial; // 168
+    public static int hidden; // 13
+    public static int errtype; // p =>0 even 
 
+    public void NNbase(double[][] data, int errtype){
+        NNbase.data = data;
+        NNbase.errtype = errtype;
+    }
+    
     /* Transform an individual to the array of weights it encodes
      */
-    public static double[] transform(individual){
+    public static double[] transform(char[] ind){
+        double[] weights = new double[14];
 
+        for(int i = 0; i < 14; i++){
+            // Calculate the integer part of wi
+                if(ind[i*32 + 1] == '1')
+                    weights[i] += 4;
+                if(ind[i*32 + 2] == '1')
+                    weights[i] += 2;
+                if(ind[i*32 + 3] == '1')
+                    weights[i] += 1;
+
+            // Calculate the decimal part of wi
+            // We can handle 7 decimal places, allowing 4 bits to encode 
+            //  a single digit
+            for(int j = 1; j < 7; j++){
+                int dig = 0;
+                if(ind[i*32 + j*4] == '1')
+                    dig = 8;
+                if(ind[i*32 + j*4 +1] == '1')
+                    dig += 4;
+                if(ind[i*32 + j*4 +2] == '1')
+                    dig += 2;
+                if(ind[i*32 + j*4 +3] == '1')
+                    dig += 1;
+                if(dig < 10)
+                    weights[i] += dig * 1/(10^j);
+            }
+            if(ind[i*32] == '1')
+                weights[i] *= -1;
+        }
+        return weights;
     }
-
-
 
     /* Fitness of a given individual
      */
-    public static double nnfitness(individual){
-        error = 0.0;
-        double[] ws = new double[initial];
+    public static double nnfitness(char[] individual){
+        double error = 0.0;
+        double[] ws = new double[14];
         ws = transform(individual); // array of weights encoded by individual
 
         // Neural network output for given individual (weights)
-        double[] firstLayer = new double[168];
-        double[] secondLayer = new double[168];
+        double[] firstLayer = new double[initial];
+        double[] secondLayer = new double[initial];
 
         for(int k = 0; k < 168; k++){
             // First layer outputs
-            for(int i = 0; i < initial; i++){
+            for(int i = 0; i < 14; i++){
                 firstLayer[k] += ws[i+1] * data[k][i];
             }
+            firstLayer[k] += ws[0];
             // Second layer outputs
-                secondLayer[k] = 1/(1+Math.exp(firstLayer[j]));
+            secondLayer[k] = 1/(1+Math.exp(firstLayer[k]));
         }
         // Return error for individual according to assumed norm
         return error(secondLayer);
+    }
 
     public static double error(double[] arr){
         double e = 0.0;
-        if(this.errtype == 0){
-            for(int i = 0; i < arr.length(); i++)
+        if(errtype == 0){
+            for(int i = 0; i < initial; i++)
                 e += Math.abs(arr[i] - data[i][13]);
         }
         else{
-            for(int i = 0; i < arr.length(); i++)
-                e += Math.pow(arr[i] - data[i][13],p);
+            for(int i = 0; i < initial; i++)
+                e += Math.pow(arr[i] - data[i][13], errtype);
         }
         return e;
     }
@@ -84,7 +123,7 @@ public class Base{
         double[] values = new double[n];
 
         char genome[];
-        genome = new char[64];
+        genome = new char[32*14];
 
         //string genome = null;
             for(int i = 0; i < n; i++){
@@ -137,7 +176,7 @@ public class Base{
             for(int j = 0; j < l; j++)
                 best[j] = population[index][j];
         else{
-            index = (int) (n*Math.random());
+            index = (int) (n * Math.random());
             for(int j = 0; j < l; j++)
                 best[j] = population[index][j];
         }
@@ -174,8 +213,9 @@ public class Base{
     }
 
 
-    public static void main(String[] args){
 
+    public static void main(String[] args){
+    
     }
 
 }
