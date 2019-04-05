@@ -214,9 +214,23 @@ public class NNtraining{
 
         double[] t = new double[14];
         t = NNbase.transform(individual);
-        System.out.println(t.length);
+        char[] s = NNbase.inv_transform(t);
+        double[] ind2 = new double[14];
+        ind2 = NNbase.transform(s);
+        for(int j = 0; j < 14; j++){
+            System.out.print(t[j]);
+            System.out.print("  ");
+            System.out.println(ind2[j]);
+        }
+
+        //for(int j = 0; j < 14*32; j++)
+        //    System.out.print(s[j]);
+        //System.out.println();
+
         for(int j = 0; j < 14; j++)
-            System.out.println(t[j]);
+            System.out.print(ind2[j]);
+        System.out.println();
+
         
         //for(int i = 0; i < 
         //System.out.println();

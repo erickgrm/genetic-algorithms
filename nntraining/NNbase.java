@@ -35,7 +35,7 @@ public class NNbase{
             for(int j = 1; j < 7; j++){
                 int dig = 0;
                 if(ind[i*32 + j*4] == '1')
-                    dig = 8;
+                    dig += 8;
                 if(ind[i*32 + j*4 +1] == '1')
                     dig += 4;
                 if(ind[i*32 + j*4 +2] == '1')
@@ -43,12 +43,42 @@ public class NNbase{
                 if(ind[i*32 + j*4 +3] == '1')
                     dig += 1;
                 if(dig < 10)
-                    weights[i] += dig * 1/(10^j);
+                    weights[i] += dig * (1/Math.pow(10,j));
             }
             if(ind[i*32] == '1')
                 weights[i] *= -1;
         }
         return weights;
+    }
+
+    /*
+     * Transform a given array of 14 numbers to the corresponding 
+     * individual
+     */
+    public static char[] inv_transform(double[] weights){
+        char[] individual = new char[14*32];
+
+        for(int i = 0; i < 14; i++){
+            int ifloor = (int) (Math.floor(Math.abs(weights[i])));
+            int idec = (int) (Math.pow(10,7)*Math.abs(weights[i] - ifloor));
+            // Sign of wi
+            if(weights[i] < 0) 
+                individual[i*32] = '1';
+
+            // Integer part of wi
+            char[] aux = ToBinary(ifloor);
+            for(int j = 0; j < aux.length; j++)
+                individual[i*32 + j + 1] = aux[j];
+
+            // Decimal part of wi
+            for(int d = 0; d < 7; d++){
+                int dig = (int) (Math.floor(idec/Math.pow(10,7-d)));
+                aux = ToBinary(dig);
+                for(int j = 0; j < aux.length; j++)
+                    individual[i*32 + (d+1)*4 + j] = aux[j];
+            }
+        }
+            return individual;
     }
 
     /* Fitness of a given individual
@@ -113,6 +143,7 @@ public class NNbase{
 
         return vsga;
     }
+
     /*
      * Evaluate the fitness of N individuals
      * @returns an array of N doubles
@@ -212,8 +243,30 @@ public class NNbase{
         return max;
     }
 
+    public static char[] ToBinary(int n){
+        char[] bin = new char[4];
+        bin[0]=bin[1]=bin[2]=bin[3] = '0';
+        int i = 0;
 
+        while(0 < n && i < 4 ){
+            if(n % 2 == 0)
+                bin[i] = '0';
+            else 
+                bin[i] = '1';
+            n = (int) Math.floor(n/2);
+            i++;
+        }
+        char temp = bin[0];
+        bin[0] = bin[3];
+        bin [3] = temp;
+        temp = bin[1];
+        bin[1] = bin[2];
+        bin[2] = temp;
 
+        return bin;
+    }
+         
+               
     public static void main(String[] args){
     
     }
