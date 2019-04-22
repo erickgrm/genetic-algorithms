@@ -1,5 +1,5 @@
 /*
- * Implementation of neural network training through a genetic algorithm 
+ * Training of a neural network through a genetic algorithm 
  *@author Erick García Ramírez
  * Algoritmos Genéticos, MCIC 2019-2
  */
@@ -10,9 +10,9 @@
  * 3 hidden neurons
  * 1 exit neuron 
  * If we feed x to the network, at the exit neuron we get a 
- * value y in [0,1] s.t. the classification is as follows:
+ * value y in [0,1], and the classification is as follows:
  * if y <= 0.25, x is of class 1
- * if 0 < 0.25 <= 0.75, x is of class 2
+ * if 0.25 < y <= 0.75, x is of class 2
  * if 0.75 < y, x is of class 3
  */
 
@@ -24,7 +24,7 @@ import java.util.StringTokenizer;
 
 public class NNtraining{
     // Neural network parameters and training data
-    public static int errtype;
+    public static int error_type;
     public static double[][] data;
     //public final initial; // Number of explicative variables
     //public final hidden; // Number of hidden neurons
@@ -53,7 +53,7 @@ public class NNtraining{
                     population[i][j] = '0';
             }
         }
-    }
+    }//End startPopulation()
 
     /*
      * Calculate the probability of each bit
@@ -69,7 +69,7 @@ public class NNtraining{
                 bitsProbabilities[k] += relFitness[i];
             }
         }
-    }
+    }//End calcBitsProbabilities 
 
     /*
      * Generate the new population using the probabilities calculated for each bit
@@ -82,7 +82,7 @@ public class NNtraining{
         // Generate new population bit by bit
         double d = 0.0;
 
-        for(int i = 0; i < N; i++){
+        for(int i = 0; i < N-1; i++){
             for(int j = 0; j < L; j++){
                 
                 d = Math.random();
@@ -101,31 +101,20 @@ public class NNtraining{
                 }
             }
         }
-        // Find index of worst individual in population
-        double[] tempFitness = new double[N];
-        tempFitness = NNbase.sgafitnessEvaluation(population); 
-        double min = 0.0;
-        int index = 0;
-        for(int i = 0; i< N; i++){
-            if(tempFitness[i] < min){
-                min = tempFitness[i];
-                index = i;
-            }
-        }
-        // Swap worst in population with oldBest, generating new population
+        // Add best individual
         for(int j = 0; j < L; j++)
-            population[index][j] = oldBest[j];
+            population[N-1][j] = oldBest[j];
     }
 
     /*
      * MAIN method
      * Creat a new object of class NNtraining
      */
-    public static double NNtraining(int N, int G, double[][] data, int errtype){
+    public static double NNtraining(int N, int G, double[][] data, int error_type){
 
        NNtraining.data = data; 
        NNtraining.N = N;
-       NNtraining.errtype = errtype;
+       NNtraining.error_type = error_type;
        fitness = new double[N];
        relFitness = new double[N];
        bitsProbabilities = new double[14*32];
@@ -195,11 +184,6 @@ public class NNtraining{
         //System.out.println(NNtraining(10, 5, data, 2));
         NNbase base = new NNbase();
         
-        //for(int j = 0; j < 14; j++)
-        //System.out.println(data[0][j]);
-
-        //System.out.println("value is "+data[993][2])
-        
         char[] individual  = new char[32*14];
             for(int j = 0; j < 32*14; j++){
                 if(Math.random() < 0.5)
@@ -208,33 +192,32 @@ public class NNtraining{
                     individual[j] = '0';
             }
         
-        for(int j = 0; j < 32*14; j++)
-            System.out.print(individual[j]);
-        System.out.println();
+        for(int i = 0; i < 14; i++){
+            for(int j = 0; j < 4; j++)
+                System.out.print(individual[14*i+j]);
+            System.out.print(" ");
+            for(int j = 4; j < 32; j++)
+                System.out.print(individual[14*i+j]);
+            System.out.println();
+        }
 
         double[] t = new double[14];
-        t = NNbase.transform(individual);
-        char[] s = NNbase.inv_transform(t);
-        double[] ind2 = new double[14];
-        ind2 = NNbase.transform(s);
+        t = NNbase.genome_to_weights(individual);
+        char[] s = NNbase.weights_to_genome(t);
         for(int j = 0; j < 14; j++){
             System.out.print(t[j]);
             System.out.print("  ");
-            System.out.println(ind2[j]);
+        }
+            System.out.println();
+        for(int i = 0; i < 14; i++){
+            for(int j = 0; j < 4; j++)
+                System.out.print(s[14*i+j]);
+            System.out.print(" ");
+            for(int j = 4; j < 32; j++)
+                System.out.print(s[14*i+j]);
+            System.out.println();
         }
 
-        //for(int j = 0; j < 14*32; j++)
-        //    System.out.print(s[j]);
-        //System.out.println();
-
-        for(int j = 0; j < 14; j++)
-            System.out.print(ind2[j]);
-        System.out.println();
-
-        
-        //for(int i = 0; i < 
-        //System.out.println();
-    
         // Several runs
         //double  temp;
         //double sum = 0.0;

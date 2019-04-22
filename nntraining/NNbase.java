@@ -17,68 +17,75 @@ public class NNbase{
     
     /* Transform an individual to the array of weights it encodes
      */
-    public static double[] transform(char[] ind){
+    public static double[] genome_to_weights(char[] genome){
         double[] weights = new double[14];
+        double wi;
+        double dec;
 
         for(int i = 0; i < 14; i++){
-            // Calculate the integer part of wi
-                if(ind[i*32 + 1] == '1')
-                    weights[i] += 4;
-                if(ind[i*32 + 2] == '1')
-                    weights[i] += 2;
-                if(ind[i*32 + 3] == '1')
-                    weights[i] += 1;
-
-            // Calculate the decimal part of wi
-            // We can handle 7 decimal places, allowing 4 bits to encode 
-            //  a single digit
-            for(int j = 1; j < 7; j++){
-                int dig = 0;
-                if(ind[i*32 + j*4] == '1')
-                    dig += 8;
-                if(ind[i*32 + j*4 +1] == '1')
-                    dig += 4;
-                if(ind[i*32 + j*4 +2] == '1')
-                    dig += 2;
-                if(ind[i*32 + j*4 +3] == '1')
-                    dig += 1;
-                if(dig < 10)
-                    weights[i] += dig * (1/Math.pow(10,j));
+            wi = 0.0;
+            dec = 0.0;
+            // Calculate integer part
+            if(genome[14*i + 1] == '1') 
+                wi += Math.pow(2,2);
+            if(genome[14*i + 2] == '1') 
+                wi += Math.pow(2,1);
+            if(genome[14*i + 3] == '1') 
+                wi += Math.pow(2,0);
+            // Calculate decimal part
+            for(int k = 4; k < 32; k++){
+                if(genome[14*i + k] ==  '1') 
+                    dec += Math.pow(2, 31-k);
             }
-            if(ind[i*32] == '1')
-                weights[i] *= -1;
+            wi += dec/Math.pow(2,28); 
+            if(genome[14*i] == '1') wi *= -1;
+
+            weights[i] = wi;    
         }
         return weights;
     }
 
     /*
-     * Transform a given array of 14 numbers to the corresponding 
-     * individual
+     * Transform a given array of 14 weights to the corresponding 
+     * genome
      */
-    public static char[] inv_transform(double[] weights){
-        char[] individual = new char[14*32];
-
+    public static char[] weights_to_genome(double[] weights){
+        char[] genome = new char[14*32];
+        char[] gen = new char[32];
+        
         for(int i = 0; i < 14; i++){
-            int ifloor = (int) (Math.floor(Math.abs(weights[i])));
-            int idec = (int) (Math.pow(10,7)*Math.abs(weights[i] - ifloor));
-            // Sign of wi
-            if(weights[i] < 0) 
-                individual[i*32] = '1';
-
-            // Integer part of wi
-            char[] aux = ToBinary(ifloor);
-            for(int j = 0; j < aux.length; j++)
-                individual[i*32 + j + 1] = aux[j];
-
-            // Decimal part of wi
-            for(int d = 0; d < 7; d++){
-                int dig = (int) (Math.floor(idec/Math.pow(10,7-d)));
-                aux = ToBinary(dig);
-                for(int j = 0; j < aux.length; j++)
-                    individual[i*32 + (d+1)*4 + j] = aux[j];
-            }
+            gen = double_to_32bits(weights[i]);
+            for(int j = 0; j < 32; j++)
+                genome[14*i + j] = gen[j];
         }
-            return individual;
+        return genome;
+    }
+
+    /*
+     * Write double as a 32-chars array
+     */
+    public static char[] double_to_32bits(double w){
+        char[] str = new char[32];
+        int integer_part;
+        int decimal_part;
+
+        if(w < 0) {str[0] = '1'; w *= -1;}
+        else str[0] = '0';
+
+        integer_part = (int) Math.floor(w);
+        decimal_part = (int) Math.floor((w - Math.floor(w))*27);
+        
+        for(int k = 0; k < 3; k++){
+            if(integer_part % 2 == 0) str[3-k] = '0'; 
+            else str[3-k] = '1';
+            integer_part = (int) integer_part/2;
+        }
+        for(int k = 0; k < 28; k++){
+            if(decimal_part % 2 == 0) str[31-k] = '0'; 
+            else str[31-k] = '1';
+            decimal_part = (int) decimal_part/2;
+        }
+        return str;
     }
 
     /* Fitness of a given individual
@@ -86,7 +93,7 @@ public class NNbase{
     public static double nnfitness(char[] individual){
         double error = 0.0;
         double[] ws = new double[14];
-        ws = transform(individual); // array of weights encoded by individual
+        ws = genome_to_weights(individual); // array of weights encoded by individual
 
         // Neural network output for given individual (weights)
         double[] firstLayer = new double[initial];
