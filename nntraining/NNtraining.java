@@ -22,24 +22,21 @@ import java.util.StringTokenizer;
 
 public class NNtraining{
     // Neural network parameters and training data
-    public static int error_type;
     public static double[][] data;
-    //public final initial; // Number of explicative variables
-    //public final hidden; // Number of hidden neurons
+    public static int error_type; // Non-negative even integer
+    public static int I = 14; // No of entry variables (13 + threshold)
+    public static int W = I*3 + 4; // No of weights
+    public static int L = W*32; // Length of genome
 
-    // Population parameters
-    public static int N; // size of population
-    public static int L; // length of genome
-
-    // Other
+    // Parameters for Statistical GA
+    public static int N ; // size of population
     public static char[][] population;
     public static double[] fitness;
-    public static double[] relFitness;
-    public static double[] bitsProbabilities;
+    public static double[] sga_fitness;
+    public static double[] relative_fitness;
+    public static double[] bits_probabilities;
 
-    /*
-     * Initialise a random population of size N
-     */
+    // Initialise a random population of size N
     public static void startPopulation(){
         population = new char[N][L];
 
@@ -51,31 +48,13 @@ public class NNtraining{
                     population[i][j] = '0';
             }
         }
-    }//End startPopulation()
+    }//End of startPopulation
 
-    /*
-     * Calculate the probability of each bit
-     */
-    public static void calcBitsProbabilities(){
-        for(int k = 0; k < L; k++){
-            bitsProbabilities[k] = 0.0;
-        }
-
-        for(int k = 0; k < L; k++){
-            for(int i = 0; i < N; i++){
-                if(population[i][k] == '1')
-                bitsProbabilities[k] += relFitness[i];
-            }
-        }
-    }//End calcBitsProbabilities 
-
-    /*
-     * Generate the new population using the probabilities calculated for each bit
-     */
+    // Generate the new population using the probabilities calculated for each bit
     public static void generateNewPopulation(){
-        // Find best before changing the whole population
-        char[] oldBest = new char[L];
-        oldBest = NNbase.best(population, fitness);
+        // Find best genome before changing the whole population
+        char[] old_best = new char[L];
+        old_best = NNbase.bestGenome(population, fitness);
     
         // Generate new population bit by bit
         double d = 0.0;
@@ -101,8 +80,23 @@ public class NNtraining{
         }
         // Add best individual
         for(int j = 0; j < L; j++)
-            population[N-1][j] = oldBest[j];
+            population[N-1][j] = old_best[j];
     }
+
+    // Calculate the probability of each bit
+    public static void calculateBitsProbabilities(){
+        for(int k = 0; k < L; k++){
+            bitsProbabilities[k] = 0.0;
+        }
+
+        for(int k = 0; k < L; k++){
+            for(int i = 0; i < N; i++){
+                if(population[i][k] == '1')
+                bits_probabilities[k] += relative_fitness[i];
+            }
+        }
+    }//End calculateBitsProbabilities 
+
 
     /*
      * MAIN method
