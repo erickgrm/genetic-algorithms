@@ -191,15 +191,6 @@ public class NNtraining{
                 else 
                     individual[j] = '0';
             }
-        
-        for(int i = 0; i < 14; i++){
-            for(int j = 0; j < 4; j++)
-                System.out.print(individual[14*i+j]);
-            System.out.print(" ");
-            for(int j = 4; j < 32; j++)
-                System.out.print(individual[14*i+j]);
-            System.out.println();
-        }
 
         double[] t = new double[14];
         t = NNbase.genome_to_weights(individual);
@@ -207,6 +198,14 @@ public class NNtraining{
         for(int j = 0; j < 14; j++){
             System.out.print(t[j]);
             System.out.print("  ");
+        }
+        for(int i = 0; i < 14; i++){
+            for(int j = 0; j < 4; j++)
+                System.out.print(individual[14*i+j]);
+            System.out.print(" ");
+            for(int j = 4; j < 32; j++)
+                System.out.print(individual[14*i+j]);
+            System.out.println();
         }
             System.out.println();
         for(int i = 0; i < 14; i++){

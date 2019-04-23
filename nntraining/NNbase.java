@@ -4,6 +4,9 @@
  *
  */
 
+import java.util.Scanner;
+import java.math.BigDecimal;
+
 public class NNbase{
     public static double[][] data;
     public static int initial; // 168
@@ -37,7 +40,7 @@ public class NNbase{
                 if(genome[14*i + k] ==  '1') 
                     dec += Math.pow(2, 31-k);
             }
-            wi += dec/Math.pow(2,28); 
+            wi += dec/(Math.pow(2,28)-1); 
             if(genome[14*i] == '1') wi *= -1;
 
             weights[i] = wi;    
@@ -67,14 +70,14 @@ public class NNbase{
     public static char[] double_to_32bits(double w){
         char[] str = new char[32];
         int integer_part;
-        int decimal_part;
+        double decimal_part;
 
         if(w < 0) {str[0] = '1'; w *= -1;}
         else str[0] = '0';
 
-        integer_part = (int) Math.floor(w);
-        decimal_part = (int) Math.floor((w - Math.floor(w))*27);
-        
+        integer_part = (int) w;
+        decimal_part = (int) ((w - (int) w)*(Math.pow(2,28)-1));
+   
         for(int k = 0; k < 3; k++){
             if(integer_part % 2 == 0) str[3-k] = '0'; 
             else str[3-k] = '1';
@@ -275,7 +278,20 @@ public class NNbase{
          
                
     public static void main(String[] args){
-    
+        
+        char[] bin = new char[32];
+        Scanner in = new Scanner(System.in);
+        
+        System.out.println("Enter a double");
+        double b = in.nextDouble();
+        
+        //b = 1/ (Math.pow(2,28)-1);
+        bin = double_to_32bits(b);
+        for(int i=0; i < 32; i++)
+            System.out.print(bin[i]);
+        System.out.println();
+
+
     }
 
 }
