@@ -1,83 +1,82 @@
 /*
- * Implementation of auxiliary routines
+ * Auxiliary routines
  *@author Erick García Ramírez
- *
  */
-
 import java.util.Scanner;
-import java.math.BigDecimal;
 
 public class NNbase{
-    public static double[][] data;
-    public static int initial; // 168
-    public static int hidden; // 13
-    public static int errtype; // p =>0 even 
+    public static int I = 14;// 14*3 + 4; // No of initial variables
+    public static int W = I*3 + 4; // No of weights
+    public static int L = W*32; // Length of genome
 
-    public void NNbase(double[][] data, int errtype){
+    public static double[][] data;
+    public static int error_type; // Non-negative even integer
+    public static int no_of_training_samples; // No of rows in data[][]
+    public static int N; // Population size
+
+    public void NNbase(double[][] data, int error_type, int N){
         NNbase.data = data;
-        NNbase.errtype = errtype;
+        NNbase.error_type = error_type;
+        NNbase.no_of_training_samples = data.length;
+        NNbase.N = N;
     }
     
-    /* Transform an individual to the array of weights it encodes
-     */
+    // Transform a genome to the array of weights it encodes
     public static double[] genome_to_weights(char[] genome){
-        double[] weights = new double[14];
+        double[] weights = new double[W];
         double wi;
         double dec;
 
-        for(int i = 0; i < 14; i++){
+        for(int i = 0; i < W; i++){
             wi = 0.0;
             dec = 0.0;
             // Calculate integer part
-            if(genome[14*i + 1] == '1') 
+            if(genome[W*i + 1] == '1') 
                 wi += Math.pow(2,2);
-            if(genome[14*i + 2] == '1') 
+            if(genome[W*i + 2] == '1') 
                 wi += Math.pow(2,1);
-            if(genome[14*i + 3] == '1') 
+            if(genome[W*i + 3] == '1') 
                 wi += Math.pow(2,0);
             // Calculate decimal part
             for(int k = 4; k < 32; k++){
-                if(genome[14*i + k] ==  '1') 
+                if(genome[W*i + k] ==  '1') 
                     dec += Math.pow(2, 31-k);
             }
             wi += dec/(Math.pow(2,28)-1); 
-            if(genome[14*i] == '1') wi *= -1;
+            if(genome[W*i] == '1') wi *= -1;
 
             weights[i] = wi;    
         }
         return weights;
-    }
+    }//END of genome_to_weights
 
-    /*
-     * Transform a given array of 14 weights to the corresponding 
-     * genome
-     */
+    //Transform an array of W weights to a genome
     public static char[] weights_to_genome(double[] weights){
-        char[] genome = new char[14*32];
-        char[] gen = new char[32];
+        char[] genome = new char[L];
+        char[] gen = new char[L];
         
-        for(int i = 0; i < 14; i++){
+        for(int i = 0; i < W; i++){
             gen = double_to_32bits(weights[i]);
             for(int j = 0; j < 32; j++)
-                genome[14*i + j] = gen[j];
+                genome[W*i + j] = gen[j];
         }
         return genome;
-    }
+    }//END of weights_to_genome
 
     /*
-     * Write double as a 32-chars array
+     * Encode a double as a 32-chars array
+     * 1st bit for sign
+     * 3 bits for the integer part
+     * 28 bits for the decimal part
      */
     public static char[] double_to_32bits(double w){
         char[] str = new char[32];
-        int integer_part;
-        double decimal_part;
+        int integer_part = (int) w;
+        double decimal_part = (int) ((w - (int) w)*(Math.pow(2,28)-1));
 
         if(w < 0) {str[0] = '1'; w *= -1;}
         else str[0] = '0';
 
-        integer_part = (int) w;
-        decimal_part = (int) ((w - (int) w)*(Math.pow(2,28)-1));
-   
         for(int k = 0; k < 3; k++){
             if(integer_part % 2 == 0) str[3-k] = '0'; 
             else str[3-k] = '1';
@@ -89,209 +88,179 @@ public class NNbase{
             decimal_part = (int) decimal_part/2;
         }
         return str;
-    }
+    }//END of double_to_32bits
 
-    /* Fitness of a given individual
-     */
-    public static double nnfitness(char[] individual){
+    // Fitness of a given genome
+    public static double fitness(char[] genome){
         double error = 0.0;
-        double[] ws = new double[14];
-        ws = genome_to_weights(individual); // array of weights encoded by individual
+        double[] weights = new double[W];
+        weights = genome_to_weights(genome); 
 
         // Neural network output for given individual (weights)
-        double[] firstLayer = new double[initial];
-        double[] secondLayer = new double[initial];
-
-        for(int k = 0; k < 168; k++){
-            // First layer outputs
-            for(int i = 0; i < 14; i++){
-                firstLayer[k] += ws[i+1] * data[k][i];
+        double[][] first_layer_outputs = new double[no_of_training_samples][3];
+        double[] final_outputs = new double[no_of_training_samples];
+        
+        // Calculate network outputs for each training sample
+        for(int k = 0; k < no_of_training_samples; k++){
+            // First layer outputs, 3 outputs for each k
+            for(int j = 0; j < 3; j++){
+                first_layer_outputs[k][j] += weights[I*j]; // Threshold contribution 
+                for(int i = 1; i < I; i++)
+                    first_layer_outputs[k][j] += 
+                        weights[I*j + i] * data[k][i-1]; 
+                first_layer_outputs[k][j] = 
+                    activation_function(first_layer_outputs[k][j]);
             }
-            firstLayer[k] += ws[0];
-            // Second layer outputs
-            secondLayer[k] = 1/(1+Math.exp(firstLayer[k]));
+            // Final outputs, single output for each k
+            final_outputs[k] += weights[I*3]; // Threshold contribution
+            for(int j = 0; j < 3; j++)
+                final_outputs[k] += first_layer_outputs[k][j];
+            final_outputs[k] = activation_function(final_outputs[k]);
         }
-        // Return error for individual according to assumed norm
-        return error(secondLayer);
+        // Return error for genome according to assumed error_type
+        return error(final_outputs);
+    }//END of fitness
+
+    public static double activation_function(double x) {
+        // return Math.tanh(x); // Hyperbolic tangent
+        return 1/(1 + Math.exp((-1)*x)); // Sigmoid
     }
 
-    public static double error(double[] arr){
+    public static double error(double[] outputs){
         double e = 0.0;
-        if(errtype == 0){
-            for(int i = 0; i < initial; i++)
-                e += Math.abs(arr[i] - data[i][13]);
+        if(error_type == 0){
+            // Sum L_1 errors over all samples
+            for(int k = 0; k < no_of_training_samples; k++)
+                e += Math.abs(outputs[k] - data[k][13]);
         }
         else{
-            for(int i = 0; i < initial; i++)
-                e += Math.pow(arr[i] - data[i][13], errtype);
+            // Sum L_error_type errors over all samples
+            for(int k = 0; k < no_of_training_samples; k++)
+                e += Math.pow(outputs[k] - data[k][13], error_type);
         }
         return e;
+    }//END of error
+
+    /*
+     * Calculate the fitness of N genomes
+     * @returns an array of N doubles
+     */
+    public static double[] fitnessEvaluation(char[][] genomes){
+        double[] fitness_values = new double[N];
+        char[] genome = new char[L];
+
+        for(int i = 0; i < N; i++){
+            // Extract the i-th genome 
+            for(int j = 0; j < L; j++)
+                genome[j] = genomes[i][j];
+            // Calculate fitness of the i-th genome
+            fitness_values[i] = fitness(genome);
+        }
+        return fitness_values;
     }
 
     /*
-     * Evaluate the fitness of N individuals under SGA
-     * @returns an array of N doubles
+     * Calculate  relative fitness of N fitness values
+     * * @returns an array of N doubles
      */
-    public static double[] sgafitnessEvaluation(char[][] toEvaluate){
-        int n = toEvaluate.length;
-        double[] v = new double[n];
-        v = fitnessEvaluation(toEvaluate);
-        double[] vsga = new double[n];
+    public static double[] relativeFitness(double[] values){
+        double sum_of_values = 0.0;
+        double[] relative_values = new double[N];
         
-        double mean = 0.0;
-        double min = v[0];
+        for(int i = 0; i < N; i++)
+            sum_of_values += values[i];
 
-            for(int i = 0; i < n; i++){
-                mean += v[i];
-                if(v[i] < min)
-                    min = v[i];
-            }
-            mean /= n;
-            
-            for(int i = 0; i < n; i++)
-                vsga[i] = v[i] + mean + min; 
-
-        return vsga;
-    }
-
-    /*
-     * Evaluate the fitness of N individuals
-     * @returns an array of N doubles
-     */
-    public static double[] fitnessEvaluation(char[][] toEvaluate){
-        int n = toEvaluate.length;
-        int l = toEvaluate[0].length;
-        double[] values = new double[n];
-
-        char genome[];
-        genome = new char[32*14];
-
-        //string genome = null;
-            for(int i = 0; i < n; i++){
-                // Extract the genome of the individual i
-                for(int j = 0; j < l; j++)
-                    genome[j] = toEvaluate[i][j];
-
-                values[i] = nnfitness(genome);
-            }
-        return values;
-    }
-
-    /*
-     * Calculate  relative fitness of the individuals
-     * @returns an array of N doubles
-     */
-    public static double[] relFitness(double[] values){
-        double maxValue = 0.0;
-        int n = values.length;
-        double[] relValues = new double[n];
-        
-        for(int i = 0; i < n; i++)
-            maxValue += values[i];
-
-        for(int i = 0; i < n; i++){
-            if(maxValue != 0.0) 
-                relValues[i] = values[i]/maxValue;
+        for(int i = 0; i < N; i++){
+            if(sum_of_values != 0.0) 
+                relative_values[i] = values[i]/sum_of_values;
             else 
-                relValues[i] = 0.0;
+                relative_values[i] = 0.0;
         }
-        return relValues;
-    }
-
-
-    public static char[] best(char[][] population, double[] fitness){
-        int n = population.length;
-        int l = population[0].length;
-        char[] best = new char[l];
-
-        int index = 0;
-        double max = 0.0;
-        for(int i = 0; i < n; i++){
-            if(max < fitness[i]){
-                max = fitness[i];
-                index = i;
-            }
-        }
-
-        if(0.0 < max) 
-            for(int j = 0; j < l; j++)
-                best[j] = population[index][j];
-        else{
-            index = (int) (n * Math.random());
-            for(int j = 0; j < l; j++)
-                best[j] = population[index][j];
-        }
-    return best;
+        return relative_values;
     }
 
     /*
-     * Copies by value arr1 into arr2
+     * Evaluate the fitness of N genomes 
+     * for the application of Statistical GA
+     * @returns an array of N doubles
      */
-    public static void hardcopy(char[][] arr1, char[][] arr2){
-        for(int i = 0; i < arr1.length; i++)
-            for(int j = 0; j < arr1[0].length; j++)
-                arr2[i][j] = arr1[i][j];
+    public static double[] sgafitnessEvaluation(char[][] genomes){
+        double[] v = new double[N];
+        v = fitnessEvaluation(genomes);
+        double[] sga_fitness = new double[N];
+        
+        double mean = sum(v)/N;
+        double min = minimum(v);
+        
+        for(int i = 0; i < N; i++)
+            sga_fitness[i] = v[i] + mean + min; 
+
+        return sga_fitness;
     }
 
-   /*
-    * @returns S the sum of the values in an array
-    */
+    // Find best genome in population
+    public static char[] bestGenome(char[][] population, double[] population_fitness){
+        char[] best_genome = new char[L];
+        double best_fitness = population_fitness[0];
+        int index_of_best_genome = 0;
+        int flag = 0;
+
+        // Find minimum fitness and the index of the genome that reachs it
+        for(int i = 0; i < N; i++){
+            if(population_fitness[i] < best_fitness){
+                best_fitness = population_fitness[i];
+                index_of_best_genome = i;
+                flag += 1; // Marks if not all fitness values are the same
+            }
+        }
+        // Pick best genome
+        if(0 < flag){
+            for(int j = 0; j < L; j++)
+               best_genome[j] = population[index_of_best_genome][j];
+        }
+        // If all fitness values were equal, pick best_genome randomly
+        else{
+            index_of_best_genome = (int) (N * Math.random());
+            for(int j = 0; j < L; j++)
+                best_genome[j] = population[index_of_best_genome][j];
+        }
+    return best_genome;
+    }
+
+    // Hard copy of arr1 into arr2
+    public static void hardcopy(char[][] array1, char[][] array2){
+        for(int i = 0; i < array1.length; i++)
+            for(int j = 0; j < array1[0].length; j++)
+                array2[i][j] = array1[i][j];
+    }
+
+    // Sum of the values in an array
     public static double sum(double[] arr){
         double total = 0.0;
         for(int i = 0; i < arr.length; i++)
             total += arr[i];
         return total;
     }
-   /*
-    * @returns maximum of array
-    */
-    public static double max(double[] arr){
-        double max = 0.0;
-        for(int i = 0; i < arr.length; i++)
+
+    // Maximum of array
+    public static double maximum(double[] arr){
+        double max = arr[0];
+        for(int i = 1; i < arr.length; i++)
             if(max < arr[i])
                 max = arr[i];
         return max;
     }
 
-    public static char[] ToBinary(int n){
-        char[] bin = new char[4];
-        bin[0]=bin[1]=bin[2]=bin[3] = '0';
-        int i = 0;
-
-        while(0 < n && i < 4 ){
-            if(n % 2 == 0)
-                bin[i] = '0';
-            else 
-                bin[i] = '1';
-            n = (int) Math.floor(n/2);
-            i++;
-        }
-        char temp = bin[0];
-        bin[0] = bin[3];
-        bin [3] = temp;
-        temp = bin[1];
-        bin[1] = bin[2];
-        bin[2] = temp;
-
-        return bin;
+    // Minimum of array
+    public static double minimum(double[] arr){
+        double min = arr[0];
+        for(int i = 1; i < arr.length; i++)
+            if(arr[i] < min)
+                min = arr[i];
+        return min;
     }
-         
-               
+
     public static void main(String[] args){
-        
-        char[] bin = new char[32];
-        Scanner in = new Scanner(System.in);
-        
-        System.out.println("Enter a double");
-        double b = in.nextDouble();
-        
-        //b = 1/ (Math.pow(2,28)-1);
-        bin = double_to_32bits(b);
-        for(int i=0; i < 32; i++)
-            System.out.print(bin[i]);
         System.out.println();
-
-
     }
-
 }

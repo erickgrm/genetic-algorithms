@@ -4,7 +4,6 @@
  * Algoritmos Genéticos, MCIC 2019-2
  */
 
-
 /* We are given the model of a neural network with: 
  * 13 + 1 initial neurons
  * 3 hidden neurons
@@ -15,7 +14,6 @@
  * if 0.25 < y <= 0.75, x is of class 2
  * if 0.75 < y, x is of class 3
  */
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.File;
@@ -184,39 +182,39 @@ public class NNtraining{
         //System.out.println(NNtraining(10, 5, data, 2));
         NNbase base = new NNbase();
         
-        char[] individual  = new char[32*14];
+        char[] genome  = new char[32*14];
             for(int j = 0; j < 32*14; j++){
                 if(Math.random() < 0.5)
-                    individual[j] = '1';
+                    genome[j] = '1';
                 else 
-                    individual[j] = '0';
+                    genome[j] = '0';
             }
 
         double[] t = new double[14];
-        t = NNbase.genome_to_weights(individual);
+        t = NNbase.genome_to_weights(genome);
         char[] s = NNbase.weights_to_genome(t);
-        for(int j = 0; j < 14; j++){
-            System.out.print(t[j]);
-            System.out.print("  ");
-        }
+        //for(int j = 0; j < 14; j++){
+        //    System.out.print(t[j]);
+        //    System.out.print("  ");
+        //}
+        System.out.println();
         for(int i = 0; i < 14; i++){
             for(int j = 0; j < 4; j++)
-                System.out.print(individual[14*i+j]);
+                System.out.print(genome[14*i+j]);
             System.out.print(" ");
             for(int j = 4; j < 32; j++)
-                System.out.print(individual[14*i+j]);
+                System.out.print(genome[14*i+j]);
             System.out.println();
-        }
+            System.out.print(t[i]);
             System.out.println();
-        for(int i = 0; i < 14; i++){
             for(int j = 0; j < 4; j++)
                 System.out.print(s[14*i+j]);
             System.out.print(" ");
             for(int j = 4; j < 32; j++)
                 System.out.print(s[14*i+j]);
             System.out.println();
+            System.out.println();
         }
-
         // Several runs
         //double  temp;
         //double sum = 0.0;
