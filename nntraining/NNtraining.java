@@ -22,8 +22,7 @@ import java.util.StringTokenizer;
 
 public class NNtraining{
     // Neural network parameters and training data
-    public static double[][] data;
-    public static int error_type; // Non-negative even integer
+    
     public static int I = 14; // No of entry variables (13 + threshold)
     public static int W = I*3 + 4; // No of weights
     public static int L = W*32; // Length of genome
@@ -96,7 +95,7 @@ public class NNtraining{
      * MAIN method
      * Creat a new object of class NNtraining
      */
-    public static double NNtraining(int N, int G, double[][] training_data, int error_type){
+    public static double[] NNtraining(int N, int G, double[][] training_data, int error_type){
 
        NNbase aux = new NNbase(training_data, error_type, N);  
        NNtraining.N = N;
@@ -127,18 +126,18 @@ public class NNtraining{
 
        // Calculate fitness of the last generation and return best
        population_fitness = aux.fitnessEvaluation(population);
-       char[] best_weights = new char[W];
+       double[] best_weights = new double[W];
        best_weights = aux.genome_to_weights(aux.bestGenome(population, population_fitness));
        for(int i = 0; i < best_weights.length; i++)
            System.out.print(best_weights[i]+" ");
        System.out.println();
-       System.out.println(aux.max(population_fitness));
+       System.out.println(aux.min(population_fitness));
+       return best_weights;
     }
 
     public static void main(String[] args){
-        
         // Read original data
-        double[][] temp = new double[168][16];
+        double[][] temp = new double[160][16];
         try {
             File file = new File("mlptrain.csv");
 
@@ -147,7 +146,7 @@ public class NNtraining{
             BufferedReader br = new BufferedReader(new FileReader(file));
             String line = null;
 
-            while((line = br.readLine()) != null && row < 168){
+            while((line = br.readLine()) != null && row < 160){
                 StringTokenizer st=new StringTokenizer(line, ",");
                 while(st.hasMoreTokens()){
                     temp[row][col] = Double.parseDouble(st.nextToken());
@@ -158,59 +157,64 @@ public class NNtraining{
             }
         }
         catch(IOException e){
-            System.out.println(":(");
-        }
+            System.out.println("Couldn't read file :(");
+        }//END read original data
 
         // Transform response variable to a number in [0,1] 
-        double[][] data = new double[168][14];
-        for(int i = 0; i < 168; i++)
+        // and build training data
+        double[][] training_data = new double[160][14];
+        for(int i = 0; i < 160; i++)
             for(int j = 0; j < 13; j++)
-                data[i][j] = temp[i][j];
-        for(int i = 0; i < 168; i++){
-            if(temp[i][13] == 1.0)
-                data[i][13] = 0;
-            if(temp[i][14] == 1.0)
-                data[i][13] = 0.5;
-            if(temp[i][15] == 1.0)
-                data[i][13] = 1.0;
+                training_data[i][j] = temp[i][j];
+        for(int i = 0; i < 160; i++){
+            if(temp[i][13] == 1)
+                training_data[i][13] = 0;
+            if(temp[i][14] == 1)
+                training_data[i][13] = 0.5;
+            if(temp[i][15] == 1)
+                training_data[i][13] = 1.0;
         }
-
-        //System.out.println(NNtraining(10, 5, data, 2));
-        NNbase base = new NNbase();
         
-        char[] genome  = new char[32*14];
-            for(int j = 0; j < 32*14; j++){
-                if(Math.random() < 0.5)
-                    genome[j] = '1';
-                else 
-                    genome[j] = '0';
-            }
+       double[] model_weights = new double[W];
+       model_weights = NNtraining(50, 500, training_data, 2);
+       ModelEvaluation model = new ModelEvaluation(model_weights, training_data, 2);
 
-        double[] t = new double[14];
-        t = NNbase.genome_to_weights(genome);
-        char[] s = NNbase.weights_to_genome(t);
-        //for(int j = 0; j < 14; j++){
-        //    System.out.print(t[j]);
-        //    System.out.print("  ");
-        //}
-        System.out.println();
-        for(int i = 0; i < 14; i++){
-            for(int j = 0; j < 4; j++)
-                System.out.print(genome[14*i+j]);
-            System.out.print(" ");
-            for(int j = 4; j < 32; j++)
-                System.out.print(genome[14*i+j]);
-            System.out.println();
-            System.out.print(t[i]);
-            System.out.println();
-            for(int j = 0; j < 4; j++)
-                System.out.print(s[14*i+j]);
-            System.out.print(" ");
-            for(int j = 4; j < 32; j++)
-                System.out.print(s[14*i+j]);
-            System.out.println();
-            System.out.println();
-        }
+       double[] predictions = model.predict();
+       for(int i = 0; i < predictions.length; i++){
+           System.out.print(predictions[i]+" ");
+       }
+       System.out.println();
+       System.out.println(model.sum_of_errors());
+       
+       // char[] genome  = new char[L];
+       //     for(int j = 0; j < L; j++){
+       //         if(Math.random() < 0.5)
+       //             genome[j] = '1';
+       //         else 
+       //             genome[j] = '0';
+       //     }
+
+       // double[] t = new double[W];
+       // t = aux.genome_to_weights(genome);
+       // char[] s = aux.weights_to_genome(t);
+       // System.out.println();
+       // for(int i = 0; i < W; i++){
+       //     for(int j = 0; j < 4; j++)
+       //         System.out.print(genome[32*i+j]);
+       //     System.out.print(" ");
+       //     for(int j = 4; j < 32; j++)
+       //         System.out.print(genome[32*i+j]);
+       //     System.out.println();
+       //     System.out.print(t[i]);
+       //     System.out.println();
+       //     for(int j = 0; j < 4; j++)
+       //         System.out.print(s[32*i+j]);
+       //     System.out.print(" ");
+       //     for(int j = 4; j < 32; j++)
+       //         System.out.print(s[32*i+j]);
+       //     System.out.println();
+       //     System.out.println();
+       // }
         // Several runs
         //double  temp;
         //double sum = 0.0;
@@ -229,5 +233,4 @@ public class NNtraining{
         //    System.out.println(sum/1000);
         
     }
-
 }

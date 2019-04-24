@@ -5,7 +5,7 @@
 import java.util.Scanner;
 
 public class NNbase{
-    public static int I = 14;// 14*3 + 4; // No of initial variables
+    public static int I = 14; // No of initial variables
     public static int W = I*3 + 4; // No of weights
     public static int L = W*32; // Length of genome
 
@@ -14,11 +14,11 @@ public class NNbase{
     public static int no_of_training_samples; // No of rows in data[][]
     public static int N; // Population size
 
-    public void NNbase(double[][] data, int error_type, int N){
-        NNbase.data = data;
-        NNbase.error_type = error_type;
-        NNbase.no_of_training_samples = data.length;
-        NNbase.N = N;
+    public NNbase(double[][] data, int error_type, int N){
+        this.data = data;
+        this.error_type = error_type;
+        this.no_of_training_samples = data.length;
+        this.N = N;
     }
     
     // Transform a genome to the array of weights it encodes
@@ -31,19 +31,19 @@ public class NNbase{
             wi = 0.0;
             dec = 0.0;
             // Calculate integer part
-            if(genome[W*i + 1] == '1') 
+            if(genome[32*i + 1] == '1') 
                 wi += Math.pow(2,2);
-            if(genome[W*i + 2] == '1') 
+            if(genome[32*i + 2] == '1') 
                 wi += Math.pow(2,1);
-            if(genome[W*i + 3] == '1') 
+            if(genome[32*i + 3] == '1') 
                 wi += Math.pow(2,0);
             // Calculate decimal part
             for(int k = 4; k < 32; k++){
-                if(genome[W*i + k] ==  '1') 
+                if(genome[32*i + k] ==  '1') 
                     dec += Math.pow(2, 31-k);
             }
             wi += dec/(Math.pow(2,28)-1); 
-            if(genome[W*i] == '1') wi *= -1;
+            if(genome[32*i] == '1') wi *= -1;
 
             weights[i] = wi;    
         }
@@ -58,7 +58,7 @@ public class NNbase{
         for(int i = 0; i < W; i++){
             gen = double_to_32bits(weights[i]);
             for(int j = 0; j < 32; j++)
-                genome[W*i + j] = gen[j];
+                genome[32*i + j] = gen[j];
         }
         return genome;
     }//END of weights_to_genome
@@ -117,6 +117,8 @@ public class NNbase{
                 final_outputs[k] += first_layer_outputs[k][j];
             final_outputs[k] = activation_function(final_outputs[k]);
         }
+
+        System.out.print(final_outputs[0]+" " );
         // Return error for genome according to assumed error_type
         return error(final_outputs);
     }//END of fitness
@@ -167,7 +169,7 @@ public class NNbase{
     public static double[] sgafitnessEvaluation(double[] fitness_values){
         double[] sga_fitness = new double[N];
         double mean = sum(fitness_values)/N;
-        double min = minimum(fitness_values);
+        double min = min(fitness_values);
         
         for(int i = 0; i < N; i++)
             sga_fitness[i] = fitness_values[i] + mean + min; 
@@ -238,7 +240,7 @@ public class NNbase{
     }
 
     // Maximum of array
-    public static double maximum(double[] arr){
+    public static double max(double[] arr){
         double max = arr[0];
         for(int i = 1; i < arr.length; i++)
             if(max < arr[i])
@@ -247,7 +249,7 @@ public class NNbase{
     }
 
     // Minimum of array
-    public static double minimum(double[] arr){
+    public static double min(double[] arr){
         double min = arr[0];
         for(int i = 1; i < arr.length; i++)
             if(arr[i] < min)
