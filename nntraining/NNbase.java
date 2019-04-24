@@ -160,6 +160,21 @@ public class NNbase{
     }
 
     /*
+     * Evaluate the fitness of N genomes 
+     * for the application of Statistical GA
+     * @returns an array of N doubles
+     */
+    public static double[] sgafitnessEvaluation(double[] fitness_values){
+        double[] sga_fitness = new double[N];
+        double mean = sum(fitness_values)/N;
+        double min = minimum(fitness_values);
+        
+        for(int i = 0; i < N; i++)
+            sga_fitness[i] = fitness_values[i] + mean + min; 
+        return sga_fitness;
+    }
+
+    /*
      * Calculate  relative fitness of N fitness values
      * * @returns an array of N doubles
      */
@@ -178,26 +193,6 @@ public class NNbase{
         }
         return relative_values;
     }
-
-    /*
-     * Evaluate the fitness of N genomes 
-     * for the application of Statistical GA
-     * @returns an array of N doubles
-     */
-    public static double[] sgafitnessEvaluation(char[][] genomes){
-        double[] v = new double[N];
-        v = fitnessEvaluation(genomes);
-        double[] sga_fitness = new double[N];
-        
-        double mean = sum(v)/N;
-        double min = minimum(v);
-        
-        for(int i = 0; i < N; i++)
-            sga_fitness[i] = v[i] + mean + min; 
-
-        return sga_fitness;
-    }
-
     // Find best genome in population
     public static char[] bestGenome(char[][] population, double[] population_fitness){
         char[] best_genome = new char[L];

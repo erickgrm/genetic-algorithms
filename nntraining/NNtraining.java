@@ -31,13 +31,13 @@ public class NNtraining{
     // Parameters for Statistical GA
     public static int N ; // size of population
     public static char[][] population;
-    public static double[] fitness;
-    public static double[] sga_fitness;
+    public static double[] population_fitness;
     public static double[] relative_fitness;
+    public static double[] sga_fitness;
     public static double[] bits_probabilities;
 
     // Initialise a random population of size N
-    public static void startPopulation(){
+    public static void starting_population(){
         population = new char[N][L];
 
         for(int i = 0; i < N; i++){
@@ -48,33 +48,42 @@ public class NNtraining{
                     population[i][j] = '0';
             }
         }
-    }//End of startPopulation
+    }//End of starting_population
+    
+    // Calculate the probability of each bit
+    public static void bitsProbabilities(){
+        for(int k = 0; k < L; k++)
+            bits_probabilities[k] = 0.0;
+
+        for(int k = 0; k < L; k++){
+            for(int i = 0; i < N; i++){
+                if(population[i][k] == '1')
+                    bits_probabilities[k] += relative_fitness[i];
+            }
+        }
+    }//End bitsProbabilities 
 
     // Generate the new population using the probabilities calculated for each bit
     public static void generateNewPopulation(){
         // Find best genome before changing the whole population
         char[] old_best = new char[L];
-        old_best = NNbase.bestGenome(population, fitness);
+        old_best = NNbase.bestGenome(population, population_fitness);
     
         // Generate new population bit by bit
         double d = 0.0;
-
         for(int i = 0; i < N-1; i++){
             for(int j = 0; j < L; j++){
-                
                 d = Math.random();
                 // Select bit
                 if(0.005 < Math.random()){
-                    if(bitsProbabilities[j] < d)
+                    if(bits_probabilities[j] < d)
                         population[i][j] = '0';
-                    else 
-                        population[i][j] = '1';
+                    else population[i][j] = '1';
                 }
                 else{
-                    if(bitsProbabilities[j] < d)
+                    if(bits_probabilities[j] < d)
                         population[i][j] = '1';
-                    else 
-                        population[i][j] = '0';
+                    else population[i][j] = '0';
                 }
             }
         }
@@ -83,54 +92,47 @@ public class NNtraining{
             population[N-1][j] = old_best[j];
     }
 
-    // Calculate the probability of each bit
-    public static void calculateBitsProbabilities(){
-        for(int k = 0; k < L; k++){
-            bitsProbabilities[k] = 0.0;
-        }
-
-        for(int k = 0; k < L; k++){
-            for(int i = 0; i < N; i++){
-                if(population[i][k] == '1')
-                bits_probabilities[k] += relative_fitness[i];
-            }
-        }
-    }//End calculateBitsProbabilities 
-
-
     /*
      * MAIN method
      * Creat a new object of class NNtraining
      */
-    public static double NNtraining(int N, int G, double[][] data, int error_type){
+    public static double NNtraining(int N, int G, double[][] training_data, int error_type){
 
-       NNtraining.data = data; 
+       NNbase aux = new NNbase(training_data, error_type, N);  
        NNtraining.N = N;
-       NNtraining.error_type = error_type;
-       fitness = new double[N];
-       relFitness = new double[N];
-       bitsProbabilities = new double[14*32];
+       population_fitness = new double[N];
+       relative_fitness = new double[N];
+       sga_fitness = new double[N];
+       bits_probabilities = new double[L];
 
-       //Start with random population P(0)
-       startPopulation();
+       // Random starting population
+       starting_population();
 
        // Generate G generations
        for(int t = 0; t < G; t++){
-            // Evaluation of fitness
-            fitness = NNbase.sgafitnessEvaluation(population);
-            
-            // Calculate Relative fitness
-            relFitness = NNbase.relFitness(fitness);
-            
-            // Calculate the probability of each bit
-            calcBitsProbabilities(); 
+           population_fitness = aux.fitnessEvaluation(population);
 
-            // Generate individuals
-            generateNewPopulation();
+           // SGA fitness
+           sga_fitness = aux.sgafitnessEvaluation(population_fitness);
+           
+           // Calculate Relative fitness
+           relative_fitness = aux.relativeFitness(sga_fitness);
+           
+           // Calculate the probability of each bit
+           bitsProbabilities(); 
+
+           // Evolve population
+           generateNewPopulation();
        }
 
        // Calculate fitness of the last generation and return best
-       return NNbase.max(NNbase.fitnessEvaluation(population));
+       population_fitness = aux.fitnessEvaluation(population);
+       char[] best_weights = new char[W];
+       best_weights = aux.genome_to_weights(aux.bestGenome(population, population_fitness));
+       for(int i = 0; i < best_weights.length; i++)
+           System.out.print(best_weights[i]+" ");
+       System.out.println();
+       System.out.println(aux.max(population_fitness));
     }
 
     public static void main(String[] args){
