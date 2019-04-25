@@ -131,7 +131,7 @@ public class NNtraining{
        for(int i = 0; i < best_weights.length; i++)
            System.out.print(best_weights[i]+" ");
        System.out.println();
-       System.out.println(aux.min(population_fitness));
+       System.out.println("Minimum error reached: " +aux.min(population_fitness));
        return best_weights;
     }
 
@@ -160,31 +160,45 @@ public class NNtraining{
             System.out.println("Couldn't read file :(");
         }//END read original data
 
+        // Verify type of the entries
+        //System.out.println(temp.length + " " + temp[0].length);
+        //for(int i = 0; i < 16; i ++)
+        //    System.out.println(temp[0][i] +" "+ ((Object)temp[0][i]).getClass().getName());
+        //System.out.println();
+
         // Transform response variable to a number in [0,1] 
         // and build training data
-        double[][] training_data = new double[160][14];
+        double[][] data = new double[160][14];
         for(int i = 0; i < 160; i++)
             for(int j = 0; j < 13; j++)
-                training_data[i][j] = temp[i][j];
+                data[i][j] = temp[i][j];
         for(int i = 0; i < 160; i++){
             if(temp[i][13] == 1)
-                training_data[i][13] = 0;
+                data[i][13] = 0;
             if(temp[i][14] == 1)
-                training_data[i][13] = 0.5;
+                data[i][13] = 0.5;
             if(temp[i][15] == 1)
-                training_data[i][13] = 1.0;
+                data[i][13] = 1.0;
         }
-        
-       double[] model_weights = new double[W];
-       model_weights = NNtraining(50, 500, training_data, 2);
-       ModelEvaluation model = new ModelEvaluation(model_weights, training_data, 2);
 
-       double[] predictions = model.predict();
-       for(int i = 0; i < predictions.length; i++){
-           System.out.print(predictions[i]+" ");
+       double[][] training_data = data;
+       double[][] test_data = data; // No split yet
+       
+       double[] model_weights = new double[W];
+           for(int p = 1; p < 2; p ++) {
+           model_weights = NNtraining(50, 500, training_data, 4);
+           ModelEvaluation model = new ModelEvaluation(model_weights, 4);
+
+           double[] predictions = model.predict(test_data);
+           String str = "\u274C";
+           for(int i = 0; i < predictions.length; i++){
+               if(test_data[i][13] == predictions[i]) str = "\u2713";
+               System.out.println(test_data[i][13] +" "+ predictions[i] + " " + str);
+               str = "\u274C";
+           }
+           System.out.println();
+           System.out.println("Error on test_data: " + model.error(test_data));
        }
-       System.out.println();
-       System.out.println(model.sum_of_errors());
        
        // char[] genome  = new char[L];
        //     for(int j = 0; j < L; j++){

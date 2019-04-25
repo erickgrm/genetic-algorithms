@@ -7,7 +7,6 @@ class ModelEvaluation {
     public static double[] learnt_weights;
     public static double[][] test_data;
     public static int error_type;
-    public static int no_of_test_samples;
     public static int I = 14;
     public static int W;
 
@@ -32,15 +31,15 @@ class ModelEvaluation {
             output += learnt_weights[I*3 + j] * first_layer_output[j-1];
         return activation_function(output);
     }
-    
-    public static double[] outputs() {
-        double[] outputs = new double[no_of_test_samples];
-        for(int i = 0; i < no_of_test_samples; i++)
-            outputs[i] = output_for_sample(test_data[i]);   
-        System.out.print(outputs[0]);
-        return outputs;
-    }
 
+    public static double[] outputs(double[][] samples) {
+        int no_of_samples = samples.length;
+        double[] outs = new double[no_of_samples];
+        for(int i = 0; i < no_of_samples; i++)
+            outs[i] = output_for_sample(samples[i]);
+        return outs;
+    }
+    
     public static double predict_sample(double[] sample) {
         double output = output_for_sample(sample);
         if(output <= 0.25) return 0.0;
@@ -48,10 +47,11 @@ class ModelEvaluation {
         else return 1.0;
     }
 
-    public static double[] predict() {
-        double[] predictions = new double[no_of_test_samples];
-        for(int i = 0; i < no_of_test_samples; i++)
-            predictions[i] = predict_sample(test_data[i]);
+    public static double[] predict(double[][] samples) {
+        int no_of_samples = samples.length;
+        double[] predictions = new double[no_of_samples];
+        for(int i = 0; i < no_of_samples; i++)
+            predictions[i] = predict_sample(samples[i]);
         return predictions;
     }
 
@@ -60,20 +60,21 @@ class ModelEvaluation {
     return 1/(1 + Math.exp((-1)*x)); // Sigmoid
     }
 
-    public static double sum_of_errors(){
-    double e = 0.0;
-    double[] outputs = outputs();
-    if(error_type == 0){
-    // Sum L_1 errors over all samples
-    for(int k = 0; k < no_of_test_samples; k++)
-    e += Math.abs(outputs[k] - test_data[k][13]);
-    }
-    else{
-    // Sum L_error_type errors over all samples
-    for(int k = 0; k < no_of_test_samples; k++)
-    e += Math.pow(outputs[k] - test_data[k][13], error_type);
-    }
-    return e;
+    public static double error(double[][] samples){
+        int no_of_samples = samples.length;
+        double e = 0.0;
+        double[] outs = outputs(samples);
+        if(error_type == 0){
+            // Sum L_1 errors over all samples
+            for(int k = 0; k < no_of_samples; k++)
+            e += Math.abs(outs[k] - samples[k][13]);
+        }
+        else{
+            // Sum L_error_type errors over all samples
+            for(int k = 0; k < no_of_samples; k++)
+            e += Math.pow(outs[k] - samples[k][13], error_type);
+        }
+        return e;
     }//END of error
 
     public static void main(String [] args){

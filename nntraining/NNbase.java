@@ -118,8 +118,6 @@ public class NNbase{
                     weights[I*3 + j] * first_layer_outputs[k][j-1];
             final_outputs[k] = activation_function(final_outputs[k]);
         }
-
-        System.out.print(final_outputs[0]+" " );
         // Return error for genome according to assumed error_type
         return error(final_outputs);
     }//END of fitness
