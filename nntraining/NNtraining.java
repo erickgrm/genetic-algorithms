@@ -127,12 +127,13 @@ public class NNtraining{
        // Calculate fitness of the last generation and return best
        population_fitness = aux.fitnessEvaluation(population);
        double[] best_weights = new double[W];
+       double[] out = new double[W+1];
        best_weights = aux.genome_to_weights(aux.bestGenome(population, population_fitness));
-       for(int i = 0; i < best_weights.length; i++)
-           System.out.print(best_weights[i]+" ");
-       System.out.println();
-       System.out.println("Minimum error reached: " +aux.min(population_fitness));
-       return best_weights;
+       for(int i = 0; i < W; i++){
+           out[i] = best_weights[i];
+       }
+       out[W] = aux.min(population_fitness);
+       return out;
     }
 
     public static void main(String[] args){
@@ -160,12 +161,6 @@ public class NNtraining{
             System.out.println("Couldn't read file :(");
         }//END read original data
 
-        // Verify type of the entries
-        //System.out.println(temp.length + " " + temp[0].length);
-        //for(int i = 0; i < 16; i ++)
-        //    System.out.println(temp[0][i] +" "+ ((Object)temp[0][i]).getClass().getName());
-        //System.out.println();
-
         // Transform response variable to a number in [0,1] 
         // and build training data
         double[][] data = new double[160][14];
@@ -184,67 +179,33 @@ public class NNtraining{
        double[][] training_data = data;
        double[][] test_data = data; // No split yet
        
-       double[] model_weights = new double[W];
-           for(int p = 1; p < 2; p ++) {
-           model_weights = NNtraining(50, 500, training_data, 4);
-           ModelEvaluation model = new ModelEvaluation(model_weights, 4);
+       //double[] model_weights = new double[W];
+       //    for(int p = 1; p < 2; p ++) {
+       //    model_weights = NNtraining(100, 500, training_data, 2);
+       //    ModelEvaluation model = new ModelEvaluation(model_weights, 2);
 
-           double[] predictions = model.predict(test_data);
-           String str = "\u274C";
-           for(int i = 0; i < predictions.length; i++){
-               if(test_data[i][13] == predictions[i]) str = "\u2713";
-               System.out.println(test_data[i][13] +" "+ predictions[i] + " " + str);
-               str = "\u274C";
-           }
-           System.out.println();
-           System.out.println("Error on test_data: " + model.error(test_data));
-       }
+       //    double[] predictions = model.predict(test_data);
+       //    String str = "\u274C";
+       //    for(int i = 0; i < predictions.length; i++){
+       //        if(test_data[i][13] == predictions[i]) str = "\u2713";
+       //        System.out.println(test_data[i][13] +" "+ predictions[i] + " " + str);
+       //        str = "\u274C";
+       //    }
+       //    System.out.println();
+       //    System.out.println("Error on test_data: " + model.error(test_data));
+       //}
        
-       // char[] genome  = new char[L];
-       //     for(int j = 0; j < L; j++){
-       //         if(Math.random() < 0.5)
-       //             genome[j] = '1';
-       //         else 
-       //             genome[j] = '0';
-       //     }
+       double[] model_weights = new double[W];
+       double[] fitted = NNtraining(70, 400, training_data, 2);
+       double[] fit = new double[W+1];
 
-       // double[] t = new double[W];
-       // t = aux.genome_to_weights(genome);
-       // char[] s = aux.weights_to_genome(t);
-       // System.out.println();
-       // for(int i = 0; i < W; i++){
-       //     for(int j = 0; j < 4; j++)
-       //         System.out.print(genome[32*i+j]);
-       //     System.out.print(" ");
-       //     for(int j = 4; j < 32; j++)
-       //         System.out.print(genome[32*i+j]);
-       //     System.out.println();
-       //     System.out.print(t[i]);
-       //     System.out.println();
-       //     for(int j = 0; j < 4; j++)
-       //         System.out.print(s[32*i+j]);
-       //     System.out.print(" ");
-       //     for(int j = 4; j < 32; j++)
-       //         System.out.print(s[32*i+j]);
-       //     System.out.println();
-       //     System.out.println();
-       // }
-        // Several runs
-        //double  temp;
-        //double sum = 0.0;
-        //int[] freq = new int[9];
-        //for(int i = 0; i < 1000;  i++){
-        //    temp = SGA(70, 64, 500);
-        //    //System.out.println(temp);
-        //    sum += temp;
-        //    freq[(int) temp / 8] ++;
-        //}
-        //    for(int i = 0; i < 9; i++){
-        //        System.out.print(i*8);
-        //        System.out.print(" = ");
-        //        System.out.println(freq[i]);
-        //    }
-        //    System.out.println(sum/1000);
-        
+       for(int l = 0; l < 100; l ++) {
+            fit = NNtraining(70, 400, training_data, 2);
+            if(fit[W] < fitted[W])
+                fitted = fit;
+       }
+       System.out.println("Optimal error: "+ fitted[W]+"\n reached for best weights");
+       for(int i = 0; i < W; i++)
+           System.out.print(fitted[i]+" ");
     }
 }
