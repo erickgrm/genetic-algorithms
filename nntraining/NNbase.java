@@ -113,8 +113,9 @@ public class NNbase{
             }
             // Final outputs, single output for each k
             final_outputs[k] += weights[I*3]; // Threshold contribution
-            for(int j = 0; j < 3; j++)
-                final_outputs[k] += first_layer_outputs[k][j];
+            for(int j = 1; j < 4; j++)
+                final_outputs[k] += 
+                    weights[I*3 + j] * first_layer_outputs[k][j-1];
             final_outputs[k] = activation_function(final_outputs[k]);
         }
 

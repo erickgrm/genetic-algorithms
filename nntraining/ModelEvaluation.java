@@ -11,11 +11,9 @@ class ModelEvaluation {
     public static int I = 14;
     public static int W;
 
-    public ModelEvaluation(double[] learnt_weights, double[][] test_data, int error_type) {
+    public ModelEvaluation(double[] learnt_weights, int error_type) {
         this.learnt_weights = learnt_weights;
-        this.test_data = test_data;
         this.error_type = error_type;
-        this.no_of_test_samples = test_data.length;
         this.W = learnt_weights.length;
     }
    
@@ -25,8 +23,8 @@ class ModelEvaluation {
 
         for(int j = 0; j < 3; j++){
             first_layer_output[j] += learnt_weights[I*j]; //Threshold
-            for(int k = 1; k < I; k++)
-                first_layer_output[j] += learnt_weights[I*j + k] * sample[k-1];
+            for(int i = 1; i < I; i++)
+                first_layer_output[j] += learnt_weights[I*j + i] * sample[i-1];
             first_layer_output[j] = activation_function(first_layer_output[j]);
         }
         output += learnt_weights[I*3];  // Threshold 
