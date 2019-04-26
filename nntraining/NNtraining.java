@@ -196,11 +196,11 @@ public class NNtraining{
        //}
        
        double[] model_weights = new double[W];
-       double[] fitted = NNtraining(70, 400, training_data, 2);
+       double[] fitted = NNtraining(70, 400, training_data, 0);
        double[] fit = new double[W+1];
 
        for(int l = 0; l < 100; l ++) {
-            fit = NNtraining(70, 400, training_data, 2);
+            fit = NNtraining(70, 400, training_data, 0);
             if(fit[W] < fitted[W])
                 fitted = fit;
        }
