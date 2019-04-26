@@ -19,6 +19,8 @@ import java.io.FileReader;
 import java.io.File;
 import java.io.IOException;
 import java.util.StringTokenizer;
+import java.io.DataOutputStream;
+import java.io.FileOutputStream;
 
 public class NNtraining{
     // Neural network parameters and training data
@@ -179,33 +181,20 @@ public class NNtraining{
        double[][] training_data = data;
        double[][] test_data = data; // No split yet
        
-       //double[] model_weights = new double[W];
-       //    for(int p = 1; p < 2; p ++) {
-       //    model_weights = NNtraining(100, 500, training_data, 2);
-       //    ModelEvaluation model = new ModelEvaluation(model_weights, 2);
-
-       //    double[] predictions = model.predict(test_data);
-       //    String str = "\u274C";
-       //    for(int i = 0; i < predictions.length; i++){
-       //        if(test_data[i][13] == predictions[i]) str = "\u2713";
-       //        System.out.println(test_data[i][13] +" "+ predictions[i] + " " + str);
-       //        str = "\u274C";
-       //    }
-       //    System.out.println();
-       //    System.out.println("Error on test_data: " + model.error(test_data));
-       //}
-       
        double[] model_weights = new double[W];
-       double[] fitted = NNtraining(70, 400, training_data, 0);
+       double[] fitted = NNtraining(50, 400, training_data, 2);
        double[] fit = new double[W+1];
 
        for(int l = 0; l < 100; l ++) {
-            fit = NNtraining(70, 400, training_data, 0);
+            fit = NNtraining(50, 400, training_data, 2);
+            System.out.print(fit[W]+", ");
             if(fit[W] < fitted[W])
                 fitted = fit;
+
        }
-       System.out.println("Optimal error: "+ fitted[W]+"\n reached for best weights");
+
+       //System.out.println(fitted[W]+", ");
        for(int i = 0; i < W; i++)
-           System.out.print(fitted[i]+" ");
+           System.out.print(fitted[i]+", ");
     }
 }
