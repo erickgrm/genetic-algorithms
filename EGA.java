@@ -170,23 +170,24 @@ public class EGA{
     }
 
     public static void main(String[] args){
-        //System.out.println(EGA(70, 64, 0.05, 500));
+        for(int i = 0; i < 20; i++)
+        System.out.println(EGA(100, 64, 0.05, 500));
 
-   		// Several runs
-        double  temp;
-        double sum = 0.0;
-        int[] freq = new int[9];
-        for(int i = 0; i < 1000;  i++){
-            temp = EGA(70, 64, 0.05, 500);
-            sum += temp;
-            freq[(int) temp / 8] ++;
-        }
-        for(int i = 0; i < 9; i++){
-			System.out.print(i*8);
-			System.out.print(" = ");
-			System.out.println(freq[i]);
-		}
-		System.out.println(sum/1000);
+   	//	// Several runs
+    //    double  temp;
+    //    double sum = 0.0;
+    //    int[] freq = new int[9];
+    //    for(int i = 0; i < 1000;  i++){
+    //        temp = EGA(70, 64, 0.05, 500);
+    //        sum += temp;
+    //        freq[(int) temp / 8] ++;
+    //    }
+    //    for(int i = 0; i < 9; i++){
+	//		System.out.print(i*8);
+	//		System.out.print(" = ");
+	//		System.out.println(freq[i]);
+	//	}
+	//	System.out.println(sum/1000);
     }
 
 }

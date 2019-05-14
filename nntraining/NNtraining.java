@@ -185,16 +185,17 @@ public class NNtraining{
        double[] fitted = NNtraining(50, 400, training_data, 2);
        double[] fit = new double[W+1];
 
-       for(int l = 0; l < 100; l ++) {
-            fit = NNtraining(50, 400, training_data, 2);
-            System.out.print(fit[W]+", ");
-            if(fit[W] < fitted[W])
-                fitted = fit;
+      // for(int l = 0; l < 100; l ++) {
+      //      fit = NNtraining(50, 400, training_data, 2);
+      //      System.out.print(fit[W]+", ");
+      //      if(fit[W] < fitted[W])
+      //          fitted = fit;
 
-       }
+      // }
 
-       //System.out.println(fitted[W]+", ");
+       System.out.println(fitted[W]+", ");
        for(int i = 0; i < W; i++)
            System.out.print(fitted[i]+", ");
+       System.out.println();
     }
 }

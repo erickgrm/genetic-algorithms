@@ -257,6 +257,7 @@ public class NNbase{
     }
 
     public static void main(String[] args){
+        System.out.print(double_to_32bits(4.1));
         System.out.println();
     }
 }

@@ -166,11 +166,18 @@ public class Base{
     * @returns maximum of array
     */
     public static double max(double[] arr){
-        double max = 0.0;
+        double max = arr[0];
         for(int i = 0; i < arr.length; i++)
             if(max < arr[i])
                 max = arr[i];
         return max;
+    }
+    public static double min(double[] arr){
+        double min = arr[0];
+        for(int i = 0; i < arr.length; i++)
+            if(arr[i] < min)
+                min = arr[i];
+        return min;
     }
 
 
