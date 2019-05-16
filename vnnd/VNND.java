@@ -1,5 +1,5 @@
 /*
- * Implementation of Eclectic Genetic Algorithm (EGA)
+ * Implementation of Eclectic Genetic Algorithm (VNND)
  *@author Erick García Ramírez
  */
 import java.io.BufferedReader;
@@ -10,12 +10,13 @@ import java.util.StringTokenizer;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 
-public class EGA{
+public class VNND{
 
     // Population parameters
     public static int N; // size of population
-    public static int L; // length of genome
-
+    public static int I = 13; // No of coordinates
+    public static int W = I*3; // No of entries for an individual
+    public static int L = W*28; // Length of genome
     // Other
     public static char[][] population;
     public static char[][] tempPopulation; 
@@ -43,11 +44,11 @@ public class EGA{
         int l = individuals[0].length;
         double temp;
         char swp;
-        double[] fit = Aux.fitnessEvaluation(individuals);
+        double[] fit = Aux.genomesFitness(individuals);
 
         for(int r = 0; r < n; r++){
             for(int i = 0; i < n-1; i++){
-                if(fit[i] < fit[i+1]){
+                if(fit[i+1] < fit[i]){
                     temp = fit[i];
                     fit[i] =  fit[i+1];
                     fit[i+1] = temp;
@@ -121,34 +122,33 @@ public class EGA{
       * Select P(t+1)
       * Ensure we keep the N best so far
       */
-    public static char[][] generateNewPopulation(char[][] individuals){
+    public static char[][] generateNewPopulation(char[][] genomes){
         char[][] best = new char[N][L];
-        char[][] orderedIndividuals;
-        orderedIndividuals = orderByFitness(individuals);
+        char[][] orderedIndividuals = orderByFitness(genomes);
 
         for(int i = 0; i < N; i++)
             for(int j = 0; j < L; j++)
                 best[i][j] = orderedIndividuals[i][j];
-
         return best;
     }
 
     /*
      * MAIN method
-     * Creat a new object of class EGA
+     * Creat a new object of class VNND
      */
-    public static double EGA(int N, int L, double[][] training_data, double pm, int G){
+    public static double[] VNND(int N, int L, double[][] training_data, double pm, int G){
 
-       EGA.N = N;
-       EGA.L = L;
-       EGA.pm = pm;
+       VNND.N = N;
+       VNND.L = L;
+       VNND.pm = pm;
        tempPopulation = new char[N][L];
+       Aux aux = new  Aux(training_data);
 
        //Start with random population P(0)
        startPopulation();
 
        for(int t = 0; t < G; t++){
-            Aux.hardcopy(population,tempPopulation);
+            aux.hardcopy(population,tempPopulation);
 
             // Order by fitness
             tempPopulation = orderByFitness(tempPopulation);
@@ -160,28 +160,32 @@ public class EGA{
             tempPopulation = uniformMutation(tempPopulation);
 
             // Concatenate old population with tempPopulation
-            char[][] aux = new char[2*N][L];
+            char[][] temp = new char[2*N][L];
             for(int i = 0; i < N; i++)
                 for(int j = 0; j < L; j++)
-                    aux[i][j] = population[i][j];
+                    temp[i][j] = population[i][j];
             for(int i = 0; i < N; i++)
                 for(int j = 0; j < L; j++)
-                    aux[N+i][j] = tempPopulation[i][j];
+                    temp[N+i][j] = tempPopulation[i][j];
 
             // Select N best
-            population = generateNewPopulation(aux);
+            population = generateNewPopulation(temp);
        }
         
-       double[] best_genome = new double[L];
+       double[] ft = aux.genomesFitness(population);
+       for(int i = 0; i < N; i++)
+           System.out.println(ft[i]);
+
+       char[] best_genome = new char[L];
        for(int j = 0; j < L; j++)
-            best_genome[i] = population[0][j];
+            best_genome[j] = population[0][j];
 
-       double[] aux_individual = Aux.genome_to_individual(best_genome);
+       double[] aux_individual = aux.genome_to_individual(best_genome);
 
-       double[] best_individual = new double[L+1];
-       for(int i = 0; i < L; i++)
+       double[] best_individual = new double[W+1];
+       for(int i = 0; i < W; i++)
            best_individual[i] = aux_individual[i];
-       best_individual[L] = Aux.max(Aux.fitnessEvaluation(population));
+       best_individual[W] = aux.min(aux.genomesFitness(population));
 
        // Return best individual in last generation
        return best_individual;
@@ -221,13 +225,43 @@ public class EGA{
        double[][] training_data = data;
        double[][] test_data = data; // No split yet
 
-       double[] fitted = EGA(70, 32*13*3, training_data, 0.05, 500);
+       //double[] fitted = VNND(70, L, training_data, 0.05, 1);
+       //System.out.println("Best fitness = "+fitted[W]+"\nObtenida por los centros");
+       //for(int k = 0; k < 3; k++) {
+       //    for(int i = 0; i < 13; i++) 
+       //        System.out.print(fitted[13*k + i]+", ");
+       //    System.out.println();
+       //}
+        
+       Aux aux = new Aux(data);
+       //char[] loner = new char[L];
+       // for(int j = 0; j < L; j++){
+       //     if(Math.random() < 0.5) loner[j] = '1';
+       //     else loner[j] = '0';
+       // }
+       // 
+        double[] lonerdouble = {0.7367873852580316, 0.7229996946565795, 0.8571483301265103, 0.43927552714674, 0.4489159526263027, 0.7706349297264029, 0.6838852788652676, 0.6275472031069815, 0.02594126025565438, 0.26877394418706724, 0.30957570414832125, 0.11242208671727064, 0.1982523620063527, 0.6299231262129662, 0.2964997265357514, 0.09074414927789624, 0.7819983019754227, 0.009351443534163548, 0.7416755845460131, 0.6049890540726075, 0.9612622818397816, 0.7081322249328056, 0.41946691803435576, 0.6720007720291643, 0.7806393719488359, 0.142204225593076, 0.6290885717760346, 0.566200191401691, 0.9798353052878205, 0.24024086535066688, 0.8038855672027378, 0.9917502589216466, 0.22348436796473103, 0.3254675430263115, 0.058007925964921436, 0.6646350795948323, 0.9783536530224742, 0.00386529044756774, 0.6998107086860043}; 
+        //double[] lonerdouble = aux.genome_to_individual(loner);
+        //for(int j = 0; j < L; j++)
+        //    System.out.print(loner[j]);
+        System.out.println();
+        for(int j = 0; j < W; j++)
+            System.out.print(lonerdouble[j]+" ");
+        System.out.println();
 
-       System.out.println(fitted[L]+", ");
-       for(int i = 0; i < L; i++)
-           System.out.print(fitted[i]+", ");
-       System.out.println();
+        System.out.println(aux.individualFitness(lonerdouble));
 
+        double[][] clusters = aux.clustering(lonerdouble);
+        int counter = 0;
+        for(int k = 0; k < 3; k++) {
+            for(int i = 0; i < data.length; i ++)
+                if(clusters[k][i] == 1) {
+                    System.out.print(i+" ");
+                    counter += 1;
+                }
+            System.out.println("\n");
+        }
+        System.out.println(aux.vnnd(clusters));
+       
     }
-
 }
