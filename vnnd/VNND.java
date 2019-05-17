@@ -14,8 +14,7 @@ public class VNND{
 
     // Population parameters
     public static int N; // size of population
-    public static int I = 13; // No of coordinates
-    public static int W = I*3; // No of entries for an individual
+    public static int W = 160; // No of entries for an individual
     public static int L = W*28; // Length of genome
     // Other
     public static char[][] population;
@@ -183,8 +182,14 @@ public class VNND{
        double[] aux_individual = aux.genome_to_individual(best_genome);
 
        double[] best_individual = new double[W+1];
-       for(int i = 0; i < W; i++)
-           best_individual[i] = aux_individual[i];
+       for(int i = 0; i < W; i++) {
+           if(aux_individual[i] <= 0.25)
+               best_individual[i] = 0;
+           if(0.25 < aux_individual[i] && aux_individual[i] < 0.75)
+               best_individual[i] = 1;
+           if(0.75 < aux_individual[i])
+               best_individual[i] = 2;
+       }
        best_individual[W] = aux.min(aux.genomesFitness(population));
 
        // Return best individual in last generation
@@ -225,43 +230,22 @@ public class VNND{
        double[][] training_data = data;
        double[][] test_data = data; // No split yet
 
-       //double[] fitted = VNND(70, L, training_data, 0.05, 1);
-       //System.out.println("Best fitness = "+fitted[W]+"\nObtenida por los centros");
-       //for(int k = 0; k < 3; k++) {
-       //    for(int i = 0; i < 13; i++) 
-       //        System.out.print(fitted[13*k + i]+", ");
-       //    System.out.println();
-       //}
-        
-       Aux aux = new Aux(data);
-       char[] loner = new char[L];
-        for(int j = 0; j < L; j++){
-            if(Math.random() < 0.5) loner[j] = '1';
-            else loner[j] = '0';
+       double[] fitted = VNND(70, L, training_data, 0.1, 100);
+       System.out.println("Best fitness = "+fitted[W]+"\nReached for the clustering:");
+       System.out.println("Cluster 0");
+       for(int i = 0; i < W; i++) {
+           if(fitted[i] == 0)
+               System.out.print(i+" ");
+       }
+       System.out.println("Cluster 1");
+       for(int i = 0; i < W; i++) {
+           if(fitted[i] == 1)
+               System.out.print(i+" ");
+       }
+       System.out.println("Cluster 2");
+       for(int i = 0; i < W; i++) {
+           if(fitted[i] == 2)
+               System.out.print(i+" ");
         }
-        
-       // double[] lonerdouble = {0.7367873852580316, 0.7229996946565795, 0.8571483301265103, 0.43927552714674, 0.4489159526263027, 0.7706349297264029, 0.6838852788652676, 0.6275472031069815, 0.02594126025565438, 0.26877394418706724, 0.30957570414832125, 0.11242208671727064, 0.1982523620063527, 0.6299231262129662, 0.2964997265357514, 0.09074414927789624, 0.7819983019754227, 0.009351443534163548, 0.7416755845460131, 0.6049890540726075, 0.9612622818397816, 0.7081322249328056, 0.41946691803435576, 0.6720007720291643, 0.7806393719488359, 0.142204225593076, 0.6290885717760346, 0.566200191401691, 0.9798353052878205, 0.24024086535066688, 0.8038855672027378, 0.9917502589216466, 0.22348436796473103, 0.3254675430263115, 0.058007925964921436, 0.6646350795948323, 0.9783536530224742, 0.00386529044756774, 0.6998107086860043}; 
-        double[] lonerdouble = aux.genome_to_individual(loner);
-        for(int j = 0; j < L; j++)
-            System.out.print(loner[j]);
-        System.out.println();
-        for(int j = 0; j < W; j++)
-            System.out.print(lonerdouble[j]+" ");
-        System.out.println();
-
-        System.out.println(aux.individualFitness(lonerdouble));
-
-        double[][] clusters = aux.clustering(lonerdouble);
-        int counter = 0;
-        for(int k = 0; k < 3; k++) {
-            for(int i = 0; i < data.length; i ++)
-                if(clusters[k][i] == 1) {
-                    System.out.print(i+" ");
-                    counter += 1;
-                }
-            System.out.println("\n");
-        }
-        System.out.println(aux.vnnd(clusters));
-       
     }
 }
