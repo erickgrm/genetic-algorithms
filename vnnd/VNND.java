@@ -15,35 +15,41 @@ public class VNND{
     // Population parameters
     public static int N; // size of population
     public static int W = 160; // No of entries for an individual
-    public static int L = W*28; // Length of genome
+    public static int L = W; // Length of genome
     // Other
-    public static char[][] population;
-    public static char[][] tempPopulation; 
+    public static double[][] population;
+    public static double[][] tempPopulation; 
     public static double pm; // Mutation probability
 
     /*
      * Initialise a random population of size N
      */
     public static void startPopulation(){
-        population = new char[N][L];
+        population = new double[N][L];
+        double rand;
 
         for(int i = 0; i < N; i++){
             for(int j = 0; j < L; j++){
-                if(Math.random() < 0.5)
-                    population[i][j] = '1';
-                else 
-                    population[i][j] = '0';
+                rand = Math.random();
+                if(rand <= 0.3333)
+                    population[i][j] = 0;
+                if(0.3333 < rand && rand <= 0.6666)
+                    population[i][j] = 1;
+                if(0.6666 < rand) 
+                    population[i][j] = 2;
+                //System.out.print(population[i][j]);
             }
+            //System.out.println();
         }
     }
 
     // Order individuals according to fitness
-    public static char[][] orderByFitness(char[][] individuals){
+    public static double[][] orderByFitness(double[][] individuals){
         int n = individuals.length;
         int l = individuals[0].length;
         double temp;
-        char swp;
-        double[] fit = Aux.genomesFitness(individuals);
+        double swp;
+        double[] fit = Aux.individualsFitness(individuals);
 
         for(int r = 0; r < n; r++){
             for(int i = 0; i < n-1; i++){
@@ -64,14 +70,14 @@ public class VNND{
     }// End of orderByFitness
 
     // Anular crossover routine
-    public static char[][] anularCrossover(char[][] individuals){
+    public static double[][] anularCrossover(double[][] individuals){
         int n = individuals.length;
         int l = individuals[0].length;
         int x;
         int y;
         int swap;
-        char[] new1 = new char[l];
-        char[] new2 = new char[l];
+        double[] new1 = new double[l];
+        double[] new2 = new double[l];
         
         // Crossover i and n-i-1
         for(int i = 0; i < (int) n/2; i++){
@@ -102,15 +108,29 @@ public class VNND{
     }// END of anularCrossover
 
     // Uniform mutation 
-    public static char[][] uniformMutation(char[][] individuals){
-        for(int i=0; i < N; i++){
-            for(int j=0; j < L; j++){ 
+    public static double[][] uniformMutation(double[][] individuals){
+        for(int i = 0; i < N; i++) {
+            for(int j = 0; j < W; j++){ 
                 // If probability of mutation > random number, swap the bit
-                if(Math.random() < pm){
-                    if(individuals[i][j] == '1')
-                        individuals[i][j] = '0';
-                    else 
-                        individuals[i][j] = '1';
+                if(Math.random() < pm) {
+                    if(individuals[i][j] == 0) {
+                        if(0.5 < Math.random())
+                            individuals[i][j] = 1;
+                        else 
+                            individuals[i][j] = 2;
+                    }
+                    if(individuals[i][j] == 1) {
+                        if(0.5 < Math.random())
+                            individuals[i][j] = 0;
+                        else 
+                            individuals[i][j] = 2;
+                    }
+                    if(individuals[i][j] == 2) {
+                        if(0.5 < Math.random())
+                            individuals[i][j] = 0;
+                        else 
+                            individuals[i][j] = 1;
+                    }
                 }
             }
         }
@@ -121,9 +141,9 @@ public class VNND{
       * Select P(t+1)
       * Ensure we keep the N best so far
       */
-    public static char[][] generateNewPopulation(char[][] genomes){
-        char[][] best = new char[N][L];
-        char[][] orderedIndividuals = orderByFitness(genomes);
+    public static double[][] generateNewPopulation(double[][] individuals){
+        double[][] best = new double[N][L];
+        double[][] orderedIndividuals = orderByFitness(individuals);
 
         for(int i = 0; i < N; i++)
             for(int j = 0; j < L; j++)
@@ -140,14 +160,14 @@ public class VNND{
        VNND.N = N;
        VNND.L = L;
        VNND.pm = pm;
-       tempPopulation = new char[N][L];
+       tempPopulation = new double[N][L];
        Aux aux = new  Aux(training_data);
 
        //Start with random population P(0)
        startPopulation();
 
        for(int t = 0; t < G; t++){
-            aux.hardcopy(population,tempPopulation);
+            tempPopulation = population;
 
             // Order by fitness
             tempPopulation = orderByFitness(tempPopulation);
@@ -159,7 +179,7 @@ public class VNND{
             tempPopulation = uniformMutation(tempPopulation);
 
             // Concatenate old population with tempPopulation
-            char[][] temp = new char[2*N][L];
+            double[][] temp = new double[2*N][L];
             for(int i = 0; i < N; i++)
                 for(int j = 0; j < L; j++)
                     temp[i][j] = population[i][j];
@@ -171,26 +191,15 @@ public class VNND{
             population = generateNewPopulation(temp);
        }
         
-       double[] ft = aux.genomesFitness(population);
+       double[] ft = aux.individualsFitness(population);
        for(int i = 0; i < N; i++)
            System.out.println(ft[i]);
 
-       char[] best_genome = new char[L];
-       for(int j = 0; j < L; j++)
-            best_genome[j] = population[0][j];
-
-       double[] aux_individual = aux.genome_to_individual(best_genome);
-
        double[] best_individual = new double[W+1];
        for(int i = 0; i < W; i++) {
-           if(aux_individual[i] <= 0.25)
-               best_individual[i] = 0;
-           if(0.25 < aux_individual[i] && aux_individual[i] < 0.75)
-               best_individual[i] = 1;
-           if(0.75 < aux_individual[i])
-               best_individual[i] = 2;
+           best_individual[i] = population[0][i];
        }
-       best_individual[W] = aux.min(aux.genomesFitness(population));
+       best_individual[W] = aux.min(aux.individualsFitness(population));
 
        // Return best individual in last generation
        return best_individual;
@@ -230,22 +239,24 @@ public class VNND{
        double[][] training_data = data;
        double[][] test_data = data; // No split yet
 
-       double[] fitted = VNND(70, L, training_data, 0.1, 100);
+       Aux aux = new Aux(training_data);
+       double[] fitted = VNND(10, L, training_data, 0.05, 10);
        System.out.println("Best fitness = "+fitted[W]+"\nReached for the clustering:");
        System.out.println("Cluster 0");
        for(int i = 0; i < W; i++) {
            if(fitted[i] == 0)
                System.out.print(i+" ");
        }
-       System.out.println("Cluster 1");
+       System.out.println("\nCluster 1");
        for(int i = 0; i < W; i++) {
            if(fitted[i] == 1)
                System.out.print(i+" ");
        }
-       System.out.println("Cluster 2");
+       System.out.println("\nCluster 2");
        for(int i = 0; i < W; i++) {
            if(fitted[i] == 2)
                System.out.print(i+" ");
         }
+       System.out.println();
     }
 }
