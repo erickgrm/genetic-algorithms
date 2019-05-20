@@ -13,7 +13,6 @@ import java.io.FileOutputStream;
 public class KNN{
     public static int K; // number of centres
     public static int D; // dimension
-    public static int W; // length of centres 
     public static double[][] training_data;
     public static double[][] centres;
     public static int N;
@@ -21,29 +20,32 @@ public class KNN{
     // Initialise centres
     public static double[][] startingCentres() {
         double[][] centres = new double[K][D];
-        //for(int k = 0; k < K; k++)
-        //    for(int j = 0; j < D; j++)
-        //        centres[k][j] = Math.random();
-        //return centres;
         for(int k = 0; k < K; k++)
-            centres[k] = training_data[(int) (N*Math.random())];
+            for(int j = 0; j < D; j++)
+                centres[k][j] = Math.random();
         return centres;
+        //for(int k = 0; k < K; k++)
+        //    centres[k] = training_data[(int) (N*Math.random())];
+        //return centres;
     }
 
     public static double[][] newCentres(double[][] centres) {
         double[][] clusters = clustering(centres); 
         double[][] new_centres = new double[K][D];
+        for(int k = 0; k < K; k++)
+            for(int j = 0; j < D; j++)
+                new_centres[k][j] = 0.0;
         int counter;
         for(int k = 0; k < K; k++)
             for(int j = 0; j < D; j++) {
                 counter = 0;
                 for(int i = 0; i < N; i++) 
                     if(clusters[i][k] == 1) {
-                        new_centres[k][j] += distance(training_data[i], centres[k]);
+                        new_centres[k][j] += training_data[i][j];
                         counter += 1;
                     }
                 new_centres[k][j] += centres[k][j];
-                new_centres[k][j] /= (counter + 2);
+                new_centres[k][j] /= (counter + 1);
             }
         return new_centres;
     }
@@ -74,10 +76,8 @@ public class KNN{
     public static double[][] distances(double[][] centres) {
         double[][] dists = new double[N][K];
         for(int i = 0; i < N; i++) {
-            System.out.println("Distances to centres");
             for(int k = 0; k < K; k++) {
                 dists[i][k] = distance(training_data[i], centres[k]);
-                System.out.print(dists[i][k]+" ");
             }
         }
         return dists;
@@ -85,7 +85,7 @@ public class KNN{
     
     public static double distance(double[] p, double[] q) {
         if(p.length != q.length) {
-            System.out.println("Different size vectors");
+            System.out.println("Different sized vectors");
             return -1;
         }
         double d = 0.0;
@@ -95,13 +95,11 @@ public class KNN{
     }
 
     // KNN main routine
-    public KNN(double[][] training_data, int K) {
+    public static void fit(double[][] training_data, int K, int G) {
         KNN.training_data = training_data;
         KNN.K = K; 
         KNN.N = training_data.length; 
         KNN.D = training_data[0].length;
-    }
-    public static void fit(int G) {
         double[][] cens = startingCentres();
         for(int g = 0; g < G; g++) 
             cens = newCentres(cens);
@@ -133,30 +131,55 @@ public class KNN{
             System.out.println("Couldn't read file :(");
         }//END read original data
 
+        // labels
+        double[] labels = new double[160];
+        for(int i = 0; i < 160; i++) {
+            if(temp[i][13+0] == 1.0) labels[i] = 0.0;
+            if(temp[i][13+1] == 1.0) labels[i] = 1.0;
+            if(temp[i][13+2] == 1.0) labels[i] = 2.0;
+        }
         // Build data array, ignore labels
-        double[][] data = new double[10][13];
-        for(int i = 0; i < 10; i++)
+        double[][] data = new double[160][13];
+        for(int i = 0; i < 160; i++)
             for(int j = 0; j < 13; j++)
                 data[i][j] = temp[i][j];
         double[][] training_data = data;
         double[][] test_data = data; // No split yet
 
-        KNN knn = new KNN(training_data, 3);
-        knn.fit(100);
-        double[][] centres = knn.centres;
-        for(int k = 0; k < 3; k++) {
-            for(int j = 0; j < 13; j++)
-                System.out.print(centres[k][j]+" ");
-            System.out.println();
-        }
-        double[][] clusters = clustering(centres);
-        System.out.println("Clusters");
-        int[] counters = new int[K];
-            for(int i = 0; i < 10; i++) {
-                for(int k = 0; k < K; k++) {
-                    System.out.print(clusters[i][k]+" ");
-                }
-                System.out.println();
+        KNN knn = new KNN();
+        double[][] bestcentres = new double[3][13];
+        double[][] clusters = new double[N][3];
+        double T = 0.0;
+        double s;
+        int flag = 0;
+        for(int t = 0; t < 100; t++) {
+            s = 0.0;
+            knn.fit(training_data, 3, 100);
+            clusters = clustering(knn.centres);
+            for(int i = 0; i < 160; i++) {
+                if(clusters[i][0] == 1 && labels[i] == 0)
+                    s += 1;
+                if(clusters[i][1] == 1 && labels[i] == 1)
+                    s += 1;
+                if(clusters[i][2] == 1 && labels[i] == 2)
+                    s += 1;
             }
+            if(155 < s) {
+                bestcentres = knn.centres;
+                flag = 1;
+            }
+            System.out.print(s+" ");
+            T += s;
+        }
+        System.out.println("\nPromedio: "+ (T/100));
+
+        if(flag == 1)
+            for(int k = 0; k < 3; k++) {
+                for(int j = 0; j < D; j++)
+                    System.out.print(bestcentres[k][j]+" ");
+            System.out.println();
+            }
+        else
+            System.out.println("Rubbish!");
     }
 }
