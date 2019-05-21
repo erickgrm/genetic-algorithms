@@ -1,7 +1,7 @@
 /*
  * Implementation of Eclectic Genetic Algorithm (VNND)
  *@author Erick García Ramírez
- */
+*/
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.File;
@@ -11,19 +11,14 @@ import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 
 public class VNND{
-
     // Population parameters
     public static int N; // size of population
-    public static int W = 160; // No of entries for an individual
-    public static int L = W; // Length of genome
-    // Other
+    public static int L = 160; // Length of genome
     public static double[][] population;
     public static double[][] tempPopulation; 
     public static double pm; // Mutation probability
 
-    /*
-     * Initialise a random population of size N
-     */
+    //  Initialise a random population of size N
     public static void startPopulation(){
         population = new double[N][L];
         double rand;
@@ -37,9 +32,7 @@ public class VNND{
                     population[i][j] = 1;
                 if(0.6666 < rand) 
                     population[i][j] = 2;
-                //System.out.print(population[i][j]);
             }
-            //System.out.println();
         }
     }
 
@@ -78,7 +71,6 @@ public class VNND{
         int swap;
         double[] new1 = new double[l];
         double[] new2 = new double[l];
-        
         // Crossover i and n-i-1
         for(int i = 0; i < (int) n/2; i++){
             // Get starting and finishing positions 
@@ -110,7 +102,7 @@ public class VNND{
     // Uniform mutation 
     public static double[][] uniformMutation(double[][] individuals){
         for(int i = 0; i < N; i++) {
-            for(int j = 0; j < W; j++){ 
+            for(int j = 0; j < L; j++){ 
                 // If probability of mutation > random number, swap the bit
                 if(Math.random() < pm) {
                     if(individuals[i][j] == 0) {
@@ -137,47 +129,33 @@ public class VNND{
         return individuals;
     }// END of uniformMutation
 
-     /*
-      * Select P(t+1)
-      * Ensure we keep the N best so far
-      */
+    //  Generate next generation
     public static double[][] generateNewPopulation(double[][] individuals){
         double[][] best = new double[N][L];
         double[][] orderedIndividuals = orderByFitness(individuals);
-
         for(int i = 0; i < N; i++)
             for(int j = 0; j < L; j++)
                 best[i][j] = orderedIndividuals[i][j];
         return best;
     }
 
-    /*
-     * MAIN method
-     * Creat a new object of class VNND
-     */
+    // Creat a new object of class VNND
     public static double[] VNND(int N, int L, double[][] training_data, double pm, int G){
-
        VNND.N = N;
        VNND.L = L;
        VNND.pm = pm;
        tempPopulation = new double[N][L];
        Aux aux = new  Aux(training_data);
-
        //Start with random population P(0)
        startPopulation();
-
        for(int t = 0; t < G; t++){
             tempPopulation = population;
-
             // Order by fitness
             tempPopulation = orderByFitness(tempPopulation);
-
             // Deterministic crossover
             tempPopulation = anularCrossover(tempPopulation);
-            
             // Mutation 
             tempPopulation = uniformMutation(tempPopulation);
-
             // Concatenate old population with tempPopulation
             double[][] temp = new double[2*N][L];
             for(int i = 0; i < N; i++)
@@ -186,23 +164,10 @@ public class VNND{
             for(int i = 0; i < N; i++)
                 for(int j = 0; j < L; j++)
                     temp[N+i][j] = tempPopulation[i][j];
-
             // Select N best
             population = generateNewPopulation(temp);
        }
-        
-       double[] ft = aux.individualsFitness(population);
-       for(int i = 0; i < N; i++)
-           System.out.println(ft[i]);
-
-       double[] best_individual = new double[W+1];
-       for(int i = 0; i < W; i++) {
-           best_individual[i] = population[0][i];
-       }
-       best_individual[W] = aux.min(aux.individualsFitness(population));
-
-       // Return best individual in last generation
-       return best_individual;
+       return population[0];
     }
 
     public static void main(String[] args){
@@ -240,23 +205,12 @@ public class VNND{
        double[][] test_data = data; // No split yet
 
        Aux aux = new Aux(training_data);
-       double[] fitted = VNND(10, L, training_data, 0.05, 10);
-       System.out.println("Best fitness = "+fitted[W]+"\nReached for the clustering:");
-       System.out.println("Cluster 0");
-       for(int i = 0; i < W; i++) {
-           if(fitted[i] == 0)
-               System.out.print(i+" ");
+       double[] fitted = VNND(70, L, training_data, 0.05, 200);
+       double[][] clusters = Aux.clustering(fitted);
+       for(int i = 0; i < L; i++) {
+           for(int k = 0; k < 3; k++) 
+               System.out.print(clusters[k][i]+" ");
+           System.out.println();
        }
-       System.out.println("\nCluster 1");
-       for(int i = 0; i < W; i++) {
-           if(fitted[i] == 1)
-               System.out.print(i+" ");
-       }
-       System.out.println("\nCluster 2");
-       for(int i = 0; i < W; i++) {
-           if(fitted[i] == 2)
-               System.out.print(i+" ");
-        }
-       System.out.println();
     }
 }

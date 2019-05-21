@@ -27,8 +27,7 @@ public class Aux{
         double[][] clusters = new double[3][data_size];
         for(int k = 0; k < 3; k++)
             for(int i = 0; i < data_size; i++)
-                clusters[k][i] = -1;
-
+                clusters[k][i] = 0;
         for(int i = 0; i < data_size; i++) {
             if(individual[i] == 0) 
                 clusters[0][i] = 1;
@@ -115,7 +114,7 @@ public class Aux{
         double dist_pq = 0.0;
         for(int i = 0; i < p.length; i++)
             dist_pq += Math.pow(p[i]-q[i],2);
-        return Math.sqrt(dist_pq);
+        return dist_pq;
     }
 
     /* Calculate all distances between each pair
