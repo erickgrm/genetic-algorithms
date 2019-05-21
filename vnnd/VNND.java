@@ -149,7 +149,7 @@ public class VNND{
        //Start with random population P(0)
        startPopulation();
        for(int t = 0; t < G; t++){
-            tempPopulation = population;
+            Aux.hardcopy(tempPopulation, population);
             // Order by fitness
             tempPopulation = orderByFitness(tempPopulation);
             // Deterministic crossover

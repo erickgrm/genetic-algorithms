@@ -11,15 +11,13 @@ import java.util.StringTokenizer;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 public class Aux{
-    public static int W = 160; // No of entries for an individual, labels of clustering
-    public static int L = W; // Length of genome
-
+    public static int L; // Length of genome
     public static double[][] data;
     public static int data_size;
-
     public Aux(double[][] data){
         this.data = data;
         this.data_size = data.length;
+        this.L = data_size;
     }
 
     // Find clustering for given individual
@@ -28,6 +26,7 @@ public class Aux{
         for(int k = 0; k < 3; k++)
             for(int i = 0; i < data_size; i++)
                 clusters[k][i] = 0;
+        System.out.println(individual.length);
         for(int i = 0; i < data_size; i++) {
             if(individual[i] == 0) 
                 clusters[0][i] = 1;
@@ -39,86 +38,14 @@ public class Aux{
         return clusters;
     }
     
-    // Individual to genome
-    public static char[] individual_to_genome(double[] individual) {
-        char[] genome = new char[L];
-        char[] temp = new char[28];
-        for(int i = 0; i < W; i++) {
-            temp = double_to_28bits(individual[i]);  
-            for(int k = 0; k < 28; k++)
-                genome[28*i+k] = temp[k];
-        }
-        return genome;
-    }
-
-    // Genome to individual
-    public static double[] genome_to_individual(char[] genome) {
-        double di;
-        double[] coord = new double[W];
-        for(int i = 0; i < W; i++){ 
-            di = 0.0;
-            for(int k = 0; k < 28; k++)
-                if(genome[28*i + k] ==  '1')
-                    di += Math.pow(2, 27-k);
-            coord[i] = di/(Math.pow(2,28)-1);
-        }
-        return coord;
-    }
-
-    // Individuals to genomes
-    public static char[][] individuals_to_genomes(double[][] individuals) {
-        int n = individuals.length;
-        int l = individuals[0].length;
-        char[][] genomes = new char[n][l];
-
-        for(int i = 0; i < n; i++)
-            genomes[i] = individual_to_genome(individuals[i]);
-        return genomes;
-    }
-    // Genomes to individuals
-    public static double[][] genomes_to_individuals(char[][] genomes) {
-        int n = genomes.length;
-        int w = (int) genomes[0].length/28;
-        double[][] individuals = new double[n][w];
-
-        for(int i = 0; i < n; i++)
-            individuals[i] = genome_to_individual(genomes[i]);
-        return individuals;
-    }
-    /*
-    * Encode a double in [0,1] as a 28-chars array
-    * no sign, no integer part, all 28 bits for decimal part
-    */
-    public static char[] double_to_28bits(double w){
-        char[] str = new char[28];
-        int decimal_part = (int) (w *(Math.pow(2,28)-1));
-        for(int k = 0; k < 28; k++) {
-            if(decimal_part % 2 == 0) str[27-k] = '0'; 
-            else str[27-k] = '1';
-            decimal_part = (int) decimal_part/2;
-        }
-        return str;
-    }//END of double_to_28bits
-
-    // Decode an array of 28 bits to the double in [0,1] it encodes
-    public static double bits_to_double(char[] bits) {
-        double d = 0.0; 
-            for(int k = 0; k < 28; k++){
-                if(bits[k] ==  '1') 
-                    d += Math.pow(2, 27-k);
-            }
-        return d/(Math.pow(2,28)-1);
-    }
-
     public static double distance(double[] p, double[] q) {
         double dist_pq = 0.0;
-        for(int i = 0; i < p.length; i++)
-            dist_pq += Math.pow(p[i]-q[i],2);
+        for(int j = 0; j < p.length; j++)
+            dist_pq += Math.pow(p[j]-q[j],2);
         return dist_pq;
     }
 
-    /* Calculate all distances between each pair
-     * of points in a set */
+    // Distances between each pair of points in a set
     public static double[][] distances(double[] points) {
         double[][] dists = new double[data_size][data_size];
         for(int i = 0; i < data_size; i++) 
@@ -127,29 +54,32 @@ public class Aux{
                     dists[i][j] = distance(data[i], data[j]);
                     dists[j][i] = dists[i][j];
                 }
-                else { dists[i][j] = -1; dists[j][i] = -1;}
+                else {dists[i][j] = -1; dists[j][i] = -1;}
             }
         return dists;
     }
 
     // Calculate v(cluster)
     public static double v(double[] cluster) {
-        double[][] dists = distances(cluster);
         double v_of_cluster = 0.0;
-        double avgmind = dminbar(cluster, dists);
-
+        double[] ds = dmins(cluster);
+        double avgmin = dmean(ds);
         for(int i = 0; i < data_size; i++)
             if(cluster[i] == 1)
-                v_of_cluster += Math.pow(dmin(i,dists)-avgmind, 2);
+                v_of_cluster += Math.pow(ds[i] - avgmin, 2);
         return v_of_cluster/(data_size - 1);
     }
 
-    public static double dminbar(double[] cluster, double[][] dists) {
-        double avg = 0.0;
-        for(int i = 0; i < data_size; i++)
+    public static double[] dmins(double[] cluster) {
+        double[][] dists = distances(cluster);
+        double[] ds = new double[data_size];
+        for(int i = 0; i < data_size; i++) {
             if(cluster[i] == 1)
-                avg += dmin(i, dists);
-        return avg/data_size;
+                ds[i] = dmin(i, dists);
+            else 
+                ds[i] = 0;
+        }
+        return ds;
     }
 
     // dmin(index of point, cluster)
@@ -174,16 +104,23 @@ public class Aux{
         }
         return s;
     }
+
+    public static double dmean(double[] array) { 
+        double avg = 0.0;
+        int c = 0;
+        for(int i = 0; i < array.length; i++)
+            if(0 < array[i]) {
+                avg += array[i];
+                c += 1;
+            }
+        if(c == 0) return 0; 
+        else return avg/c;
+    }
     
     public static double individualFitness(double[] individual) {
         return vnnd(clustering(individual)); 
     }
     
-    // Calculate fitness of genome under VNND
-    //public static double genomeFitness(char[] genome) {
-    //    return individualFitness(genome_to_individual(genome));
-    //}
-
     // Calculate the fitness of an array of individuals 
     public static double[] individualsFitness(double[][] individuals){
         int n = individuals.length; 
@@ -258,7 +195,7 @@ public class Aux{
 
     public static void main(String[] args){
         // Read original data
-        double[][] temp = new double[160][13];
+        double[][] temp = new double[160][16];
         try {
             File file = new File("mlptrain.csv");
             int row = 0;
@@ -286,9 +223,9 @@ public class Aux{
             for(int j = 0; j < 13; j++)
                 data[i][j] = temp[i][j];
 
-        double[] loner = new double[L];
+        double[] loner = new double[160];
         double rand;
-        for(int j = 0; j < L; j++) {
+        for(int j = 0; j < 160; j++) {
             rand = Math.random();
             if(rand <=  0.33333)
                 loner[j] = 0;
@@ -301,9 +238,8 @@ public class Aux{
         System.out.println();
 
         Aux aux = new Aux(data);
-        double[][] clusters = clustering(loner);
+        double[][] clusters = aux.clustering(loner);
         int counter = 0;
-        System.out.println(clusters.length+" "+ clusters[0].length);
         for(int k = 0; k < 3; k++) {
             for(int i = 0; i < data_size; i ++)
                 if(clusters[k][i] == 1) {
@@ -311,11 +247,6 @@ public class Aux{
                     counter += 1;
                 }
             System.out.println("\n");
-        }
-        for(int k=0;k<3;k++){
-            for(int i = 0; i < clusters[k].length; i++)
-                System.out.print(clusters[k][i]+" ");
-            System.out.println();
         }
 
         System.out.println(v(clusters[0]));
