@@ -1,7 +1,8 @@
 /*
- * Implementation of auxiliary routines
+ * Implementation of VNND validation index
+ * and auxiliary routines for EGA
  * @author Erick García Ramírez
- *
+ * @date May 2019
  */
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -10,10 +11,13 @@ import java.io.IOException;
 import java.util.StringTokenizer;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
+
 public class Aux{
+
     public static int L; // Length of genome
     public static double[][] data;
     public static int data_size;
+
     public Aux(double[][] data){
         this.data = data;
         this.data_size = data.length;
@@ -26,7 +30,6 @@ public class Aux{
         for(int k = 0; k < 3; k++)
             for(int i = 0; i < data_size; i++)
                 clusters[k][i] = 0;
-        System.out.println(individual.length);
         for(int i = 0; i < data_size; i++) {
             if(individual[i] == 0) 
                 clusters[0][i] = 1;
@@ -41,8 +44,8 @@ public class Aux{
     public static double distance(double[] p, double[] q) {
         double dist_pq = 0.0;
         for(int j = 0; j < p.length; j++)
-            dist_pq += Math.pow(p[j]-q[j],2);
-        return dist_pq;
+            dist_pq += Math.pow(p[j] - q[j], 2);
+        return Math.sqrt(dist_pq);
     }
 
     // Distances between each pair of points in a set
@@ -64,10 +67,13 @@ public class Aux{
         double v_of_cluster = 0.0;
         double[] ds = dmins(cluster);
         double avgmin = dmean(ds);
+        int c = 0;
         for(int i = 0; i < data_size; i++)
-            if(cluster[i] == 1)
+            if(cluster[i] == 1) {
+                c +=1;
                 v_of_cluster += Math.pow(ds[i] - avgmin, 2);
-        return v_of_cluster/(data_size - 1);
+            }
+        return v_of_cluster/(c - 1);
     }
 
     public static double[] dmins(double[] cluster) {
@@ -102,7 +108,10 @@ public class Aux{
             s += v(clusters[k]);
             //System.out.println(v(clusters[k])+" s "+ s);
         }
-        return s;
+        return Math.abs(s-0.02629674884469558);
+    }
+    public static double vnndInd(double[] individual) {
+        return vnnd(clustering(individual));
     }
 
     public static double dmean(double[] array) { 
@@ -146,27 +155,22 @@ public class Aux{
     return population[index];
     }
 
-    /*
-     * Copies by value arr1 into arr2
-     */
+    // Copies by value arr1 into arr2
     public static void hardcopy(double[][] arr1, double[][] arr2){
         for(int i = 0; i < arr1.length; i++)
             for(int j = 0; j < arr1[0].length; j++)
                 arr2[i][j] = arr1[i][j];
     }
 
-   /*
-    * @returns S the sum of the values in an array
-    */
+    // @returns S the sum of the values in an array
     public static double sum(double[] arr){
         double total = 0.0;
         for(int i = 0; i < arr.length; i++)
             total += arr[i];
         return total;
     }
-   /*
-    * @returns maximum of array
-    */
+   
+    // @returns maximum of array
     public static double max(double[] arr){
         double max = arr[0];
         for(int i = 0; i < arr.length; i++)
@@ -224,6 +228,13 @@ public class Aux{
                 data[i][j] = temp[i][j];
 
         double[] loner = new double[160];
+        for(int i = 0; i < 53; i++)
+            loner[i] = 0;
+        for(int i = 0; i < 65; i++)
+            loner[53+i] = 1;
+        for(int i = 0; i < 42; i++)
+            loner[53+65+i] = 2;
+        /*
         double rand;
         for(int j = 0; j < 160; j++) {
             rand = Math.random();
@@ -235,20 +246,21 @@ public class Aux{
                 loner[j] = 2;
             System.out.print(loner[j]+" ");
         }
+        */
         System.out.println();
 
         Aux aux = new Aux(data);
         double[][] clusters = aux.clustering(loner);
         int counter = 0;
+
         for(int k = 0; k < 3; k++) {
             for(int i = 0; i < data_size; i ++)
-                if(clusters[k][i] == 1) {
-                    System.out.print(i+" ");
-                    counter += 1;
-                }
+                System.out.print(clusters[k][i]+" ");
             System.out.println("\n");
         }
 
+
+            System.out.println("\n");
         System.out.println(v(clusters[0]));
         System.out.println(v(clusters[1]));
         System.out.println(v(clusters[2]));

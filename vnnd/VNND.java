@@ -17,6 +17,7 @@ public class VNND{
     public static double[][] population;
     public static double[][] tempPopulation; 
     public static double pm; // Mutation probability
+    public static int nm;
 
     //  Initialise a random population of size N
     public static void startPopulation(){
@@ -24,7 +25,9 @@ public class VNND{
         double rand;
 
         for(int i = 0; i < N; i++){
-            for(int j = 0; j < L; j++){
+            for(int j = 0; j < L; j++) {
+                population[i][j] = (int) (3*Math.random());
+                /*
                 rand = Math.random();
                 if(rand <= 0.3333)
                     population[i][j] = 0;
@@ -32,6 +35,7 @@ public class VNND{
                     population[i][j] = 1;
                 if(0.6666 < rand) 
                     population[i][j] = 2;
+                */
             }
         }
     }
@@ -100,75 +104,91 @@ public class VNND{
     }// END of anularCrossover
 
     // Uniform mutation 
-    public static double[][] uniformMutation(double[][] individuals){
-        for(int i = 0; i < N; i++) {
-            for(int j = 0; j < L; j++){ 
-                // If probability of mutation > random number, swap the bit
-                if(Math.random() < pm) {
-                    if(individuals[i][j] == 0) {
+    public static double[][] uniformMutation(double[][] individuals) {
+        int n = individuals.length;
+        int l = individuals[0].length;
+        int index;
+        for(int i = 0; i < n; i++) {
+                for(int m = 0; m < 10; m++) {
+                    index = (int) (l * Math.random());
+                    // If probability of mutation > random number, swap the bit
+                    if(individuals[i][index] == 0) {
                         if(0.5 < Math.random())
-                            individuals[i][j] = 1;
+                            individuals[i][index] = 1;
                         else 
-                            individuals[i][j] = 2;
+                            individuals[i][index] = 2;
                     }
-                    if(individuals[i][j] == 1) {
-                        if(0.5 < Math.random())
-                            individuals[i][j] = 0;
-                        else 
-                            individuals[i][j] = 2;
-                    }
-                    if(individuals[i][j] == 2) {
-                        if(0.5 < Math.random())
-                            individuals[i][j] = 0;
-                        else 
-                            individuals[i][j] = 1;
+                    else {
+                        if(individuals[i][index] == 1) {
+                            if(0.5 < Math.random())
+                                individuals[i][index] = 0;
+                            else 
+                                individuals[i][index] = 2;
+                        }
+                        else { 
+                            if(individuals[i][index] == 2) {
+                                if(0.5 < Math.random())
+                                    individuals[i][index] = 0;
+                                else 
+                                    individuals[i][index] = 1;
+                            }
+                        }
                     }
                 }
-            }
         }
-        return individuals;
+            return individuals;
     }// END of uniformMutation
 
-    //  Generate next generation
-    public static double[][] generateNewPopulation(double[][] individuals){
-        double[][] best = new double[N][L];
-        double[][] orderedIndividuals = orderByFitness(individuals);
-        for(int i = 0; i < N; i++)
-            for(int j = 0; j < L; j++)
-                best[i][j] = orderedIndividuals[i][j];
-        return best;
-    }
+        public static int expectedMutations() {
+            //int expected = 0;
+            //for(int i = 0; i < N; i++)
+            //    expected += i*Combinations(N,i)*Math.pow(pm,i)*Math.pow(1-pm,N-i);
+            return 30;
+        }
 
-    // Creat a new object of class VNND
-    public static double[] VNND(int N, int L, double[][] training_data, double pm, int G){
-       VNND.N = N;
-       VNND.L = L;
-       VNND.pm = pm;
-       tempPopulation = new double[N][L];
-       Aux aux = new  Aux(training_data);
-       //Start with random population P(0)
-       startPopulation();
-       for(int t = 0; t < G; t++){
-            Aux.hardcopy(tempPopulation, population);
-            // Order by fitness
-            tempPopulation = orderByFitness(tempPopulation);
-            // Deterministic crossover
-            tempPopulation = anularCrossover(tempPopulation);
-            // Mutation 
-            tempPopulation = uniformMutation(tempPopulation);
-            // Concatenate old population with tempPopulation
-            double[][] temp = new double[2*N][L];
+        //  Generate next generation
+        public static double[][] generateNewPopulation(double[][] individuals){
+            double[][] best = new double[N][L];
+            double[][] orderedIndividuals = orderByFitness(individuals);
             for(int i = 0; i < N; i++)
                 for(int j = 0; j < L; j++)
-                    temp[i][j] = population[i][j];
-            for(int i = 0; i < N; i++)
-                for(int j = 0; j < L; j++)
-                    temp[N+i][j] = tempPopulation[i][j];
-            // Select N best
-            population = generateNewPopulation(temp);
-       }
-       return population[0];
-    }
+                    best[i][j] = orderedIndividuals[i][j];
+            return best;
+        }
+
+        // Creat a new object of class VNND
+        public static double[] VNND(int N, double[][] training_data, double pm, int G){
+           VNND.N = N;
+           VNND.L = training_data.length;
+           VNND.pm = pm;
+           VNND.nm = expectedMutations();
+           tempPopulation = new double[N][L];
+           Aux aux = new  Aux(training_data);
+           //Start with random population P(0)
+           startPopulation();
+           for(int t = 0; t < G; t++){
+                Aux.hardcopy(population, tempPopulation);
+                // Order by fitness
+                tempPopulation = orderByFitness(tempPopulation);
+                // Deterministic crossover
+                tempPopulation = anularCrossover(tempPopulation);
+                // Mutation 
+                tempPopulation = uniformMutation(tempPopulation);
+                // Concatenate old population with tempPopulation
+                double[][] temp = new double[2*N][L];
+                for(int i = 0; i < N; i++)
+                    for(int j = 0; j < L; j++)
+                        temp[i][j] = population[i][j];
+                for(int i = 0; i < N; i++)
+                    for(int j = 0; j < L; j++)
+                        temp[N+i][j] = tempPopulation[i][j];
+                // Select N best
+                population = generateNewPopulation(temp);
+                //System.out.println(aux.vnndInd(population[0]) +" "+ aux.vnndInd(population[N-1]));
+           }
+           System.out.println(aux.vnndInd(population[0]));
+           return population[0];
+        }
 
     public static void main(String[] args){
         // Read original data
@@ -201,16 +221,22 @@ public class VNND{
             for(int j = 0; j < 13; j++)
                 data[i][j] = temp[i][j];
 
-       double[][] training_data = data;
-       double[][] test_data = data; // No split yet
+        // labels
+        double[] labels = new double[160];
+        for(int i = 0; i < 160; i++) {
+            if(temp[i][13+0] == 1.0) labels[i] = 0.0;
+            if(temp[i][13+1] == 1.0) labels[i] = 1.0;
+            if(temp[i][13+2] == 1.0) labels[i] = 2.0;
+        }
+        double[][] training_data = data;
+        double[][] test_data = data; // No split yet
 
-       Aux aux = new Aux(training_data);
-       double[] fitted = VNND(70, L, training_data, 0.05, 200);
-       double[][] clusters = Aux.clustering(fitted);
-       for(int i = 0; i < L; i++) {
-           for(int k = 0; k < 3; k++) 
-               System.out.print(clusters[k][i]+" ");
-           System.out.println();
-       }
+        // Testeo
+        Aux aux = new Aux(training_data);
+        double[][] fitted = VNND(80, training_data, 0.05, 400);
+        for(int i = 0; i < 160; i ++)
+            System.out.print(fitted[i]);
+        System.out.println(aux.individualFitness(fitted));
+
     }
 }
