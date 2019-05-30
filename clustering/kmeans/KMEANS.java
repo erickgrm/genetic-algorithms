@@ -147,39 +147,28 @@ public class KMEANS{
         double[][] test_data = data; // No split yet
 
         KMEANS knn = new KMEANS();
-        double[][] bestcentres = new double[3][13];
         double[][] clusters = new double[N][3];
-        double T = 0.0;
-        double s;
-        int flag = 0;
-        for(int t = 0; t < 100; t++) {
-            s = 0.0;
+        for(int t = 0; t < 10; t++) {
             knn.fit(training_data, 3, 100);
             clusters = clustering(knn.centres);
-            for(int i = 0; i < 160; i++) {
-                if(clusters[i][0] == 1 && labels[i] == 0)
-                    s += 1;
-                if(clusters[i][1] == 1 && labels[i] == 1)
-                    s += 1;
-                if(clusters[i][2] == 1 && labels[i] == 2)
-                    s += 1;
+            for(int i = 0; i < 53; i++) {
+                if(clusters[i][0] == 1) System.out.print(0);
+                if(clusters[i][1] == 1) System.out.print(1);
+                if(clusters[i][2] == 1) System.out.print(2);
             }
-            if(155 < s) {
-                bestcentres = knn.centres;
-                flag = 1;
-            }
-            System.out.print(s+" ");
-            T += s;
-        }
-        System.out.println("\nPromedio: "+ (T/100));
-
-        if(flag == 1)
-            for(int k = 0; k < 3; k++) {
-                for(int j = 0; j < D; j++)
-                    System.out.print(bestcentres[k][j]+" ");
             System.out.println();
+            for(int i = 53; i < 53 + 65; i++) {
+                if(clusters[i][0] == 1) System.out.print(0);
+                if(clusters[i][1] == 1) System.out.print(1);
+                if(clusters[i][2] == 1) System.out.print(2);
             }
-        else
-            System.out.println("Rubbish!");
+            System.out.println();
+            for(int i = 53 + 65; i < 53 + 65 + 42; i++) {
+                if(clusters[i][0] == 1) System.out.print(0);
+                if(clusters[i][1] == 1) System.out.print(1);
+                if(clusters[i][2] == 1) System.out.print(2);
+            }
+            System.out.println("\n");
+        }
     }
 }

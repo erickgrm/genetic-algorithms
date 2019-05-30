@@ -12,65 +12,25 @@ import java.util.StringTokenizer;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 
-public class AuxAGKNN{
+public class AuxSphVNND{
     public static int I = 13;   // Dimension
     public static int W = I*3; // Number of coordinates for centres
     public static int L = W*28; // Length of genome
     public static double[][] data;
     public static int data_size;
 
-    public AuxAGKNN(double[][] data){
+    public AuxSphVNND(double[][] data){
         this.data = data;
         this.data_size = data.length;
     }
 
-
-    public static double[] genome_to_individual(char[] genome) {
-        double[] individual = new double[W];
-        char[] bits = new char[28];
-        for(int j = 0; j < W; j++) {
-            for(int l = 0; l < 28; l++)
-                bits[l] = genome[j*28 + l];
-            individual[j] = bits28_to_double(bits);
-        }
-        return individual;
-    }
-
-    public static char[] individual_to_genome(char[] individual) {
-        char[] genome = new char[L];
-        char[] bits = new char[28];
-        for(int i = 0; i < W; i++) { 
-            bits = double_to_28bits(individual[i]);
-            for(int l = 0; l < 28; l++)
-                genome[W*28 + l] = bits[l];
-        }
-        return genome;
-    }
-
-    public static double bits28_to_double(char[] bits) {
-        double d=0.0;
-        for(int l = 0; l < 28; l++) 
-            if(bits[l] == '1') d += Math.pow(2, 27-l);
-        return d/(Math.pow(2,28)-1);
-    }
-
-    public static char[] double_to_28bits(double d) {
-        char[] bits = new char[28];
-        int intd = (int) (d*(Math.pow(2,28)-1));
-        for(int l = 0; l < 28; l++) {
-            if(intd % 2 == 0) 
-                bits[27-l] = '0';
-            else 
-                bits[27-l] = '1';
-            intd = (int) intd/2;
-        }
-        return bits;
-    }
+    // Return the centres
+    public static double[] centres(
 
     // Find clustering for given individual
     public static double[][] clustering(double[] individual) {
         double[][] dists = new double[data_size][3];
-        dists = distances_to_individual(individual);
+        dists = distances_to_individual(centres(individual));
         double[][] clusters = new double[3][data_size];
         for(int k = 0; k < 3; k++)
             for(int i = 0; i < data_size; i++)
@@ -308,23 +268,29 @@ public class AuxAGKNN{
         double rand;
         for(int j = 0; j < W; j++) {
             loner[j] = Math.random();
-            System.out.print(loner[j]+" ");
         }
-        System.out.println();
 
-
-        AuxAGKNN aux = new AuxAGKNN(data);
+        AuxSphVNND aux = new AuxSphVNND(data);
         double[][] clusters = aux.clustering(loner);
         int counter = 0;
 
-        for(int k = 0; k < 3; k++) {
-            for(int i = 0; i < data_size; i ++)
-                System.out.print(clusters[k][i]+" ");
-            System.out.println("\n");
+        for(int i = 0; i < 53; i++) {
+            for(int k = 0; k < 3; k++) 
+                if(clusters[k][i] == 1) System.out.print(k);
         }
+        System.out.println();
+        for(int i = 53; i < 53 + 65; i++) {
+            for(int k = 0; k < 3; k++) 
+                if(clusters[k][i] == 1) System.out.print(k);
+        }
+        System.out.println();
+        for(int i = 53 + 65; i < 53 + 65 +42; i++) {
+            for(int k = 0; k < 3; k++) 
+                if(clusters[k][i] == 1) System.out.print(k);
+        }
+        System.out.println();
 
-
-            System.out.println("\n");
+        System.out.println("\n");
         System.out.println(v(clusters[0]));
         System.out.println(v(clusters[1]));
         System.out.println(v(clusters[2]));

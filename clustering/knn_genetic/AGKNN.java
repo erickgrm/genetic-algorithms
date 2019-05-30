@@ -196,27 +196,38 @@ public class AGKNN{
         double[][] test_data = data; // No split yet
 
 
-        AuxAGKNN aux = new AuxAGKNN(training_data);
-        double[] fitted = AGKNN(70, training_data, 0.05, 400);
-        double[][] clusters = aux.clustering(fitted);
-        for(int i = 0; i < 160; i ++) {
-            if(clusters[0][i] == 1)
-                System.out.print(0);
-            if(clusters[1][i] == 1)
-                System.out.print(1);
-            if(clusters[2][i] == 1)
-                System.out.print(2);
-        }
-        System.out.println(aux.individualFitness(fitted));
-
         /*
+        AuxAGKNN aux = new AuxAGKNN(training_data);
+        double[] fitted = AGKNN(70, training_data, 0.1, 500);
+        double[][] clusters = aux.clustering(fitted);
+        for(int i = 0; i < 53; i ++) {
+            if(clusters[0][i] == 1) System.out.print(0);
+            if(clusters[1][i] == 1) System.out.print(1);
+            if(clusters[2][i] == 1) System.out.print(2);
+        }
+        System.out.println();
+        for(int i = 53; i < 53 + 65; i ++) {
+            if(clusters[0][i] == 1) System.out.print(0);
+            if(clusters[1][i] == 1) System.out.print(1);
+            if(clusters[2][i] == 1) System.out.print(2);
+        }
+        System.out.println();
+        for(int i = 53 + 65; i < 53 + 65 +42 ; i ++) {
+            if(clusters[0][i] == 1) System.out.print(0);
+            if(clusters[1][i] == 1) System.out.print(1);
+            if(clusters[2][i] == 1) System.out.print(2);
+        }
+        System.out.println("\n Minimum sum of squared distances: "+aux.individualFitness(fitted));
+        */
+
+        AuxAGKNN aux = new AuxAGKNN(training_data);
         double fit = 0;
-        double best_s = 1000;
+        double best_s = 100;
+        double[] fitted = new double[W];// AGKNN(70, training_data, 0.1, 500);
         double s = 0.0;
         double[] best = new double[W];
-        int flag = 0;
         for(int h = 0; h < 100; h++){
-            fitted = AGKNN(70, training_data, 0.05, 400);
+            fitted = AGKNN(70, training_data, 0.05, 500);
             fit = aux.individualFitness(fitted);
             s += fit;
             if(fit < best_s) {
@@ -228,6 +239,24 @@ public class AGKNN{
         System.out.println("SSQE minima promedio: "+ s);
         System.out.println("SSQE minima: "+ best_s);
         System.out.println("Alcanzada para el etiquetado: ");
-        */
+        double[][] clusters = aux.clustering(best);
+        for(int i = 0; i < 53; i ++) {
+            if(clusters[0][i] == 1) System.out.print(0);
+            if(clusters[1][i] == 1) System.out.print(1);
+            if(clusters[2][i] == 1) System.out.print(2);
+        }
+        System.out.println();
+        for(int i = 53; i < 53 + 65; i ++) {
+            if(clusters[0][i] == 1) System.out.print(0);
+            if(clusters[1][i] == 1) System.out.print(1);
+            if(clusters[2][i] == 1) System.out.print(2);
+        }
+        System.out.println();
+        for(int i = 53 + 65; i < 53 + 65 +42 ; i ++) {
+            if(clusters[0][i] == 1) System.out.print(0);
+            if(clusters[1][i] == 1) System.out.print(1);
+            if(clusters[2][i] == 1) System.out.print(2);
+        }
+        System.out.println();
     }
 }
