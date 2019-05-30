@@ -1,0 +1,153 @@
+\documentclass[11pt]{beamer}
+\usepackage[utf8x]{inputenc}
+\usepackage[spanish]{babel}
+\decimalpoint
+\usepackage{amssymb,amsthm,amsmath}
+%\usetheme{Boadilla}
+\usetheme{CambridgeUS}
+\title{Clustering basado en algoritmos genéticos}
+\subtitle{Clasificación de vinos}
+\author[E. García Ramírez]{Erick García Ramírez}
+\institute{Algoritmos Genéticos\\ {\tiny 2019-II MCIC--IIMAS, UNAM}}
+\date{24 de Mayo de 2019}
+\usepackage{listings}
+\usepackage{tikz,pgf}
+\usetikzlibrary{matrix,arrows,automata}
+\newcommand\Fontvi{\fontsize{9}{7}\selectfont}
+\newcommand\Fontvin{\fontsize{8}{7}\selectfont}
+\newtheorem{algo}{Algoritmo}
+
+\begin{document}
+\begin{frame}
+\maketitle
+\end{frame}
+
+\begin{frame}
+    \frametitle{El problema}
+    \begin{itemize}
+        \item Lograr la clasificación de los vinos por medio de algoritmos de clustering. 
+        \item Cada muestra tiene 13 atributos, y hay 160 muestras en total.
+        \item Clustering es una técnica de aprendizaje no supervisado, así que ignoramos completamente las etiquetas
+            originales. 
+        \item Existen diferentes formas de abordar el problema, y diferentes formas de codificar el espacio de
+                soluciones para poder usar un AG. 
+    \end{itemize}
+\end{frame}
+\begin{frame}[fragile]
+    \frametitle{Algoritmo 1: VNND-no esféricos}
+        \begin{itemize}
+            \item Un genoma es directamente (la representación de) un clustering. 
+                \[C = 012022\dots2101\]
+            \item La población corresponde a una colección de clusterings.
+            \item Evolución dirigida por la función de fitness
+                \[VNND(C) = \text{varianza de la distancia del vecino más cercano}\]
+            \item Si C representa $(C_0, C_1 C_2)$ , $VNND(C) = v(C_0)+v(C_1)+v(C_2)$, donde
+                \[v(C_k):=\frac{1}{|C_k|-1} \sum_{x\in C_k} (mindist(x,C_k)-mindist\_promedio(C_k))^2 \]
+            \item Los clusters no tienen que ser esféricos.
+        \end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Algoritmo 2 (VNND-esféricos)}
+        \begin{itemize}
+            \item Un genoma representa 39 reales en $[0,1]$, que corresponden a 3 centros. 
+            \item Longitud de un genoma 39*28 = 1092 bits (se usan 28 bits. 
+                \item La población es un conjunto de ternas de centros. 
+                \item Evolución dirigida por la función de fitness VNND, es decir, los clusters se forman por distancia
+                    más cercana a los centros pero los clusters se evalúan con VNND. 
+                \item Por cómo se forman los clusters, estos deben ser esféricos.
+        \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+    \frametitle{Algoritmo 3 (KNN-genético)}
+        \begin{itemize}
+            \item Representación idéntica a la del anterior, un genoma son tres centros codificados en binario. 
+            \item Función de fitness: la típica de K-neares-neighbours. Si el genoma $G$ representa los centros $(d_0,
+                d_1,d_2)\in [0,1]^3$ y estos generan el clustering $(C_0,C_1,C_2)$, 
+                \[ ssqe(G) := \sum _{i = 0}^3 \sum_{x\in C_k} dist(x,d_k)^2\]
+            \item  Los clusters son esféricos.
+        \end{itemize}
+
+\end{frame}
+\begin{frame}[fragile]
+    \frametitle{Comparación}
+        \begin{itemize}
+            \item Compararemos los algoritmos 1-3. Estos están basados en algoritmos genéticos.
+            \item Como referencia, incluiremos en la comparación al algoritmo clásico K-means (no hay ningún mecanismo
+                    genético en su implementación). 
+        \end{itemize}
+
+\end{frame}
+
+    \begin{frame}
+        \frametitle{Resultados VNND-no esféricosy VNND-esféricos}
+    \begin{itemize}
+        \item VNND-no esféricos: 100 ejecuciones  de EGA(80 individuos, pm = 0.05, 400 generaciones), 
+        \item Menor VNND promedio sobre todas las ejecuciones:  3.813588483361774E-7
+        \item Mejor VNND: 7.798732472308334E-9
+        \item Resulta en el etiquetado: 
+       \small{ 2211212022122121010112000202000011122001100220
+        000110210101101010210211111110001120120122110002111202012020221
+    212222122211222100211010010012222001211110202210101}
+
+        \item Este etiquetado no distingue correctamente a los tres vinos. 
+            \pause
+        \item Los resultados con VNND-esféricos no son mejores. 
+    \end{itemize}
+        \end{frame}
+
+        \begin{frame}
+        \frametitle{Resultados KNN-genético}
+    \begin{itemize}
+        \item VNND-genético: 100 ejecuciones  de EGA(50 individuos, pm = 0.05, 400 generaciones), 
+        \item ssqe mínima promedio: 53.28181837865105 
+        \item Mínima ssqe: 49.43424115092314
+        \item Resulta en el etiquetado: 
+            \small{11111111111111111111111111111111111111111111111111111
+            2022222202022220222222222222002202222222202022220222222220222202
+        0000000000000000000000000000000000000000000}
+
+        \item Este etiquetado distingue bastante bien a los tres vinos. 
+
+%      \item Matriz de confusión
+%          \begin{center}{\small Clase real}\end{center}
+%          \begin{tabular}{p{2cm}| p{2cm}| p{2cm}| p{2cm}}
+%        
+%            &vino 1 & vino 2 & vino 3 \\
+%            \hline 
+%            vino 1  & 50 & 7 & 1 \\
+%            \hline
+%            vino 2  &3 & 58 & 1 \\
+%            \hline
+%            vino 3  &0 &0 & 40
+%          \end{tabular}
+    \end{itemize}
+\end{frame}
+
+        \begin{frame}
+        \frametitle{Resultados K-means}
+    \begin{itemize}
+        \item K-means: de 100 ejecuciones, 
+        \item Promedio de etiquetas correctas: 52 
+        \item Pero se sabe que K-means es muy sensible a la elección de los centros iniciales. Mejor contamos los casos
+            que dan buena clasificación. 
+        \item De las 100 ejecuciones 10 alcanzaron 160 clasificaciones correctas, y 15 alcanzaron más de 150
+            clasificaciones correctas. 
+        \item Si se ejecuta suficientes veces para eliminar el problema de la elección de los punto iniciales, K-means
+            da buenos resultados.
+    \end{itemize}
+\end{frame}
+%
+    \begin{frame}
+        \frametitle{Observaciones finales}
+        \begin{itemize}
+            \item El VNND del clustering correcto es $\approx0.026$, mientras que los algoritmos 1 y 2 minimizan el
+                valor de VNND muy por debajo de tal valor. 
+            \item Se intentó minimizar $|VNND-0.026|$ pero tampoco hay buenos resultados de clasificación. 
+        \end{itemize}
+    \end{frame}
+\end{document}
